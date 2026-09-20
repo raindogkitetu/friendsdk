@@ -5,6 +5,7 @@ import {
   createGamePreview,
   expectedReward,
   maximumPrize,
+  outcomeForRoll,
   parseChanceGame,
 } from "../../dist/game.js";
 
@@ -21,6 +22,18 @@ const protocolBurnReference = price / 2n;
 const protocolRewardsReference = price - protocolBurnReference;
 
 assert.equal(definition.outcomes.reduce((sum, outcome) => sum + outcome.chanceBps, 0), 10_000);
+assert.deepEqual(definition.outcomes.map(outcome => [outcome.name, outcome.chanceBps, outcome.reward]), [
+  ["Dewbud", 5_000, 400_000_000_000_000_000n],
+  ["Sunpetal", 3_000, 1_000_000_000_000_000_000n],
+  ["Prismvine", 1_500, 1_500_000_000_000_000_000n],
+  ["Starbloom", 500, 2_500_000_000_000_000_000n],
+]);
+for (const [roll, outcomeId] of [
+  [0, 1], [4_999, 1],
+  [5_000, 2], [7_999, 2],
+  [8_000, 3], [9_499, 3],
+  [9_500, 4], [9_999, 4],
+]) assert.equal(outcomeForRoll(definition, roll), outcomeId, "Outcome boundary mismatch at roll " + roll);
 assert.equal(expected, 850_000_000_000_000_000n);
 assert.equal(minPrize, 400_000_000_000_000_000n);
 assert.equal(maxPrize, 2_500_000_000_000_000_000n);
