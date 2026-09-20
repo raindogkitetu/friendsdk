@@ -17,14 +17,14 @@ const rewards = definition.outcomes.map(outcome => outcome.reward);
 const minPrize = rewards.reduce((min, reward) => reward < min ? reward : min, rewards[0]);
 const previewStake = maxPrize * 10n;
 const previewBalance = 20n * RF;
-const proposedBurn = price / 10n;
-const proposedSeasonVault = price / 20n;
+const protocolBurnReference = price / 2n;
+const protocolRewardsReference = price - protocolBurnReference;
 
 assert.equal(definition.outcomes.reduce((sum, outcome) => sum + outcome.chanceBps, 0), 10_000);
 assert.equal(expected, 850_000_000_000_000_000n);
 assert.equal(minPrize, 400_000_000_000_000_000n);
 assert.equal(maxPrize, 2_500_000_000_000_000_000n);
-assert.equal(price - expected, proposedBurn + proposedSeasonVault);
+assert.equal(protocolBurnReference + protocolRewardsReference, price);
 assert.equal(previewStake, 25n * RF);
 
 async function runGardenPath(name, roll) {
@@ -87,7 +87,7 @@ console.log(JSON.stringify({
   minRewardPathPlayerBalanceAfter15RF: Number(minPath.rfBalance) / Number(RF),
   minRewardPathKeptLiabilityAfter15RF: Number(minPath.rewardLiability) / Number(RF),
   guaranteedPeakResonanceSignals: 15,
-  proposedBurnRF: Number(proposedBurn) / Number(RF),
-  proposedSeasonVaultRF: Number(proposedSeasonVault) / Number(RF),
+  protocolBurnReferenceRF: Number(protocolBurnReference) / Number(RF),
+  protocolRewardsReferenceRF: Number(protocolRewardsReference) / Number(RF),
   totalChanceBps: 10_000,
 }, null, 2));

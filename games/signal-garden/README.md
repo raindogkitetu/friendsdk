@@ -19,14 +19,14 @@ keeps the real wallet, network and fresh Friend-ownership gate.*
 The core loop is deliberately easy to audit. Preview currency is labeled **sim RF**
 in the HUD and action controls, and cumulative simulated RF spend stays visible
 even on the 360 px layout, while the activity receipt shows the
-corresponding production-model allocation without claiming that a live burn occurred.
+corresponding current-protocol reference without claiming that a live burn or reward routing occurred.
 
 | For every 10 simulated Signal Seed purchases | Amount |
 | --- | ---: |
 | Gross simulated RF activity | 10 sim RF |
 | Expected harvest value | 8.5 sim RF |
-| Proposed burn model | 1 sim RF equivalent |
-| Proposed seasonal-vault model | 0.5 sim RF equivalent |
+| Current protocol-reference burn | 5 sim RF equivalent |
+| Current protocol-reference rewards | 5 sim RF equivalent |
 
 Harvesting does not reduce the gross-spend counter. It reopens scarce garden space,
 so repeat play increases visible RF activity while every reward remains fixed and
@@ -60,8 +60,9 @@ over an unrelated game:
 6. Fill all twelve plots, or harvest blooms to reopen space and continue.
 
 The in-game **Token activity receipt** keeps a running session total of acquired
-seeds, signals planted and simulated RF spent. It also calculates the matching
-10% burn and 5% season-vault proposal without presenting either as a live transfer.
+seeds, signals planted and simulated RF spent. It also shows a clearly labeled
+**current protocol reference**: the same gross activity split 50% burn / 50% rewards,
+without presenting either value as a live transfer or as funding for preview payouts.
 
 Two non-financial session goals make repeat planting useful without changing RF odds:
 **Bloom discovery** remembers which of the four signals have appeared even after
@@ -107,8 +108,8 @@ It parses the same `game.json` through FriendSDK and drives the SDK's actual
 `createGamePreview` ledger through fifteen `buy → play → settle → redeem`
 cycles using the real 12-slot garden order: keep the first twelve blooms, then
 harvest one bloom before each of signals 13–15 to reopen a slot. It checks 10,000
-bps, 0.85 RF expected harvest, 2.5 RF maximum harvest, the proposed 0.10/0.05 RF
-model split, the maximum-reward house-bankroll path (2.5 sim RF free stake remains),
+bps, 0.85 RF expected harvest, 2.5 RF maximum harvest, the 50/50 protocol-reference
+split, the maximum-reward house-bankroll path (2.5 sim RF free stake remains),
 and the minimum-reward player-balance path (6.2 sim RF remains from the 20 sim RF
 starting balance while twelve 0.4 sim RF blooms remain kept).
 
@@ -123,39 +124,32 @@ Harmony is a session score with no RF value and no effect on outcomes:
 
 The score rewards garden composition without making an undisclosed financial claim.
 
-## Proposed production economy
+## Production alignment
 
-The preview's expected-value gap is 0.15 RF per simulated 1 RF seed purchase.
-The Signal Garden model assigns that fixed 0.15 RF purchase share transparently,
-while actual bloom payouts remain variable and require separate maximum-prize backing:
-
-- **0.10 RF (10%) burned** per seed purchase.
-- **0.05 RF (5%) sent to a seasonal vault** funding community garden goals and
-  fully covered season rewards.
-- **0.85 RF expected harvest value**, while every possible reward remains fully reserved at its published maximum.
-
-This split is a labeled **Signal Garden prototype model**, not a live burn, a
-promise, or a description of current Rare Friends protocol routing. FriendSDK
-v0.1.2 does not expose a burn or season-vault action.
-
-### Current protocol alignment
+The preview payout table has an 85% expected simulated harvest, but that is a
+separate game-preview mechanic. It is **not** presented as the production routing
+of a Rare Friends gameplay payment.
 
 Rare Friends' current [$RAREFRIENDS documentation](https://rarefriends.com/docs/rarefriends)
-describes general gameplay payments as **50% burn / 50% rewards**.
+describes general gameplay payments as **50% burn / 50% rewards**. Signal Garden
+therefore shows a separate protocol-reference counter alongside gross simulated
+spend. For example, 10 sim RF of gross preview activity displays a 5 RF burn
+equivalent and 5 RF rewards equivalent.
 
-Signal Garden's 85% harvest / 10% burn / 5% seasonal-vault model is therefore not
-presented as a drop-in production payment route. A live version must be redesigned
-and reviewed against the then-current protocol rules; that may require changing
-the seed price, reward table, reserve funding or routing before any on-chain launch.
-No live contract or transaction flow is included in this submission.
+Neither transfer occurs in the preview, and the protocol reward half is not claimed
+to fund the simulated bloom payouts. A live version would need a separately funded
+player-payout reserve, explicit wallet confirmations, and review against the
+then-current protocol mechanics. FriendSDK v0.1.2 does not expose burn/reward-routing
+actions to this preview. No live contract or transaction flow is included.
 
-The model creates three aligned loops:
+The design creates three aligned loops:
 
-1. Every seed purchase is RF activity; planting consumes the prepaid seed rather
-   than charging RF a second time.
-2. The burn is proportional and predictable instead of depending on player losses.
-3. Kept blooms personalize the Friend, while harvesting returns the published fixed
-   value and reopens scarce garden space.
+1. Every Seed purchase is visible RF activity; planting consumes the prepaid seed
+   rather than charging RF a second time.
+2. The protocol-reference counter makes the current 50% burn / 50% rewards rule
+   visible without pretending that simulated transfers occurred.
+3. Kept blooms personalize the Friend, while harvesting returns the disclosed
+   simulated value and reopens scarce garden space.
 
 Because the receipt tracks gross Seed purchases rather than net balance, harvesting
 to reopen space and then repurchasing makes repeat simulated RF usage visible instead

@@ -127,8 +127,8 @@ async function run(width, extended = false) {
       await game.getByRole("button", { name: "View activity receipt", exact: true }).click();
       await game.getByRole("heading", { name: "Token activity receipt", exact: true }).waitFor();
       assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND3 sim RF/);
-      assert.match(await game.locator(".signal-activity").textContent(), /SG MODEL BURN · 10%0\.3 sim RF/);
-      assert.match(await game.locator(".signal-activity").textContent(), /SG MODEL VAULT · 5%0\.15 sim RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF BURN · 50%1\.5 sim RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF REWARDS · 50%1\.5 sim RF/);
       assert.match(await game.locator(".signal-activity").textContent(), /SESSION RESONANCETUNED/);
       assert.match(await game.locator(".signal-activity").textContent(), /BLOOMS DISCOVERED[1-3]\/4/);
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
@@ -185,6 +185,8 @@ async function run(width, extended = false) {
         await game.getByRole("button", { name: "View activity receipt", exact: true }).click();
         assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND15 sim RF/);
         assert.match(await game.locator(".signal-activity").textContent(), /SESSION RESONANCEEVERGREEN/);
+        assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF BURN · 50%7\.5 sim RF/);
+        assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF REWARDS · 50%7\.5 sim RF/);
         await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
       }
 
