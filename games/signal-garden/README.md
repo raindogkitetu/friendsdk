@@ -1,8 +1,8 @@
 # Signal Garden
 
-Grow a personalized signal garden around your verified Rare Friend. Buy a simulated
-Signal Seed for 1 RF, choose one of twelve plots, reveal a bloom, then keep it for
-harmony or harvest its fixed RF value.
+Grow a personalized signal garden around your verified Rare Friend. Buy a Signal
+Seed for 1 sim RF, choose one of twelve plots, reveal a bloom, then keep it for
+harmony or harvest its fixed sim RF value.
 
 Signal Garden is a FriendSDK v0.1.2 Vibeathon game. The SDK runtime supplies the
 wallet connection, owned-Friend picker, fresh eligibility check, sandbox, preview
@@ -21,12 +21,12 @@ in the HUD and action controls, and cumulative simulated RF spend stays visible
 even on the 360 px layout, while the activity receipt shows the
 corresponding production-model allocation without claiming that a live burn occurred.
 
-| For every 10 simulated Signal Seeds | Amount |
+| For every 10 simulated Signal Seed purchases | Amount |
 | --- | ---: |
-| Gross RF activity | 10 RF |
-| Expected harvest value | 8.5 RF |
-| Proposed burn | 1 RF |
-| Proposed seasonal vault | 0.5 RF |
+| Gross simulated RF activity | 10 sim RF |
+| Expected harvest value | 8.5 sim RF |
+| Proposed burn model | 1 sim RF equivalent |
+| Proposed seasonal-vault model | 0.5 sim RF equivalent |
 
 Harvesting does not reduce the gross-spend counter. It reopens scarce garden space,
 so repeat play increases visible RF activity while every reward remains fixed and
@@ -79,18 +79,18 @@ does not spend RF, request a signature or send a transaction.
 
 | Result | Chance | Fixed harvest value | Base harmony |
 | --- | ---: | ---: | ---: |
-| Dewbud | 50% / 5,000 bps | 0.4 RF | 1 |
-| Sunpetal | 30% / 3,000 bps | 1 RF | 2 |
-| Prismvine | 15% / 1,500 bps | 1.5 RF | 4 |
-| Starbloom | 5% / 500 bps | 2.5 RF | 8 |
+| Dewbud | 50% / 5,000 bps | 0.4 sim RF | 1 |
+| Sunpetal | 30% / 3,000 bps | 1 sim RF | 2 |
+| Prismvine | 15% / 1,500 bps | 1.5 sim RF | 4 |
+| Starbloom | 5% / 500 bps | 2.5 sim RF | 8 |
 
 | Rule | Exact value |
 | --- | --- |
-| Signal Seed | 1 RF (`1000000000000000000` base units) |
+| Signal Seed | 1 sim RF (`1000000000000000000` RF base units in the definition) |
 | One planting | Consumes exactly one Signal Seed and produces exactly one bloom |
-| Expected harvest | 0.85 RF per seed / 85% |
-| Maximum harvest | 2.5 RF |
-| Backing | Every purchased or pending seed reserves 2.5 RF; kept blooms retain their fixed liability |
+| Expected harvest | 0.85 sim RF per seed / 85% |
+| Maximum harvest | 2.5 sim RF |
+| Backing | Every purchased or pending seed reserves 2.5 sim RF; kept blooms retain their fixed simulated liability |
 | Harvest expiry | None |
 | Preview starting balance | 20 simulated RF, supplied by the SDK runtime |
 | Preview prize stake | 25 simulated RF (10× the 2.5 RF maximum prize), supplied by the SDK runtime |
@@ -138,9 +138,8 @@ v0.1.2 does not expose a burn or season-vault action.
 
 ### Current protocol alignment
 
-Rare Friends' current token documentation describes general gameplay payments as
-**50% burn / 50% rewards**:
-https://rarefriends.com/docs/rarefriends
+Rare Friends' current [$RAREFRIENDS documentation](https://rarefriends.com/docs/rarefriends)
+describes general gameplay payments as **50% burn / 50% rewards**.
 
 Signal Garden's 85% harvest / 10% burn / 5% seasonal-vault model is therefore not
 presented as a drop-in production payment route. A live version must be redesigned
@@ -156,8 +155,9 @@ The model creates three aligned loops:
 3. Kept blooms personalize the Friend, while harvesting returns the published fixed
    value and reopens scarce garden space.
 
-Because the receipt tracks gross seed activity rather than net balance, harvesting
-and replanting visibly compounds RF usage instead of erasing the prior loop.
+Because the receipt tracks gross Seed purchases rather than net balance, harvesting
+to reopen space and then repurchasing makes repeat simulated RF usage visible instead
+of erasing the prior loop.
 
 Future seasons can add community layouts, non-redeemable cosmetic habitats backed
 by RF spend and opt-in garden exhibitions. Trading, creator fees, persistent saves
@@ -210,6 +210,8 @@ the SDK's read-only test fixture. It verifies:
 - post-action read failure recovery: one failed read retries automatically, while
   repeated read failure blocks further economy actions until verified refresh;
 - reveal, keep, plot inspection and harvest;
+- a 960 px extended run that fills all 12 plots, verifies the full-garden purchase
+  block, harvests to reopen space, and reaches the 15-signal EVERGREEN tier;
 - token-activity receipt, always-visible mobile RF spend, session resonance,
   bloom discovery, guide and reduced-motion controls;
 - visible phone-width action errors, non-blocking status overlays, double-click
@@ -245,7 +247,7 @@ development and static builds require a real eligible wallet.
 | `style.css` | Responsive desktop/mobile presentation and reduced-motion rules |
 | `game.json` | Exact RF price, outcome weights and fixed rewards |
 | `simulate.mjs` | Deterministic economy assertions |
-| `check.mjs` | Focused end-to-end browser flow at 960 px and 360 px |
+| `check.mjs` | Focused browser flows at 960, 760, 521 and 360 px; 960 also runs the full 15-signal loop |
 
 ## Credits
 
