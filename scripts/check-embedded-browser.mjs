@@ -80,7 +80,29 @@ try {
     assert.equal(await canvas.getAttribute('data-x'), pausedX, 'Host menu pauses child input');
     await canvas.evaluate(node => node.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight', bubbles: true })));
     await hostButton('Close Friend wallet').click();
-    await canvas.focus(); await page.keyboard.down('ArrowRight'); await page.waitForTimeout(150); await page.keyboard.up('ArrowRight');
+    // Wait for the child to receive paused=false instead of assuming a fixed
+    // scheduler delay. CI can be busy enough that 150ms fires before the bridge
+    // pause update reaches the iframe.
+    await canvas.evaluate(async node => {
+      const deadline = performance.now() + 2_000;
+      while (node.tabIndex !== 0 && performance.now() < deadline) {
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      }
+      if (node.tabIndex !== 0) throw new Error('Game input did not resume after the host menu closed.');
+    });
+    await canvas.focus();
+    await page.keyboard.down('ArrowRight');
+    try {
+      await canvas.evaluate(async (node, startX) => {
+        const deadline = performance.now() + 2_000;
+        while (node.dataset.x === startX && performance.now() < deadline) {
+          await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+        if (node.dataset.x === startX) throw new Error('Keyboard movement did not resume.');
+      }, pausedX);
+    } finally {
+      await page.keyboard.up('ArrowRight');
+    }
     assert.notEqual(await canvas.getAttribute('data-x'), pausedX, 'Keyboard movement resumes');
 
     await gameButton('Bait & tackle').click(); await gameButton('Buy bait').click();
