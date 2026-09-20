@@ -21,7 +21,7 @@ async function run(width, extended = false) {
         "Preview must start at the SDK runtime's 20 sim RF balance with zero spend");
 
       if (extended) {
-        await game.locator("body").evaluate(() => {
+        await page.evaluate(() => {
           const original = crypto.getRandomValues.bind(crypto);
           const rolls = [1500, 6000, 8500, 9700, 1500, 6000, 8500, 9700,
             1500, 6000, 8500, 9700, 1500, 6000, 8500];

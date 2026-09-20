@@ -117,7 +117,16 @@ test('watch rebuilds register newly emitted assets while unrelated files stay pr
       if (!second) await new Promise(resolve => setTimeout(resolve, 50));
     }
     assert(second, 'The watch rebuild must register its new hashed asset');
-    assert.match(await (await fetch(`${url}/${second}`)).text(), /second/);
+    let assetReady = false, assetText = '';
+    const assetDeadline = Date.now() + 5000;
+    while (!assetReady && Date.now() < assetDeadline) {
+      const response = await fetch(`${url}/${second}`);
+      assetText = response.status === 200 ? await response.text() : '';
+      assetReady = response.status === 200 && /second/.test(assetText);
+      if (!assetReady) await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    assert.equal(assetReady, true, 'The registered watch asset must become readable with its rebuilt content');
+    assert.match(assetText, /second/);
     assert.equal((await fetch(`${url}/.env.audit`)).status, 404);
   } finally {
     if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
