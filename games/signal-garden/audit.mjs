@@ -84,9 +84,10 @@ for (const phrase of [
   "960, 760, 521 and 360",
   "keep the first twelve blooms",
   "test-only synchronization/readiness fixes",
-  "0.35 RF expected gap per Seed",
   "85% preview return is therefore not a",
 ]) assert(readme.includes(phrase), "README is missing audited statement: " + phrase);
+assert(/0\.35 RF expected gap\s+per Seed/.test(readme.replace(/\*\*/g, "")),
+  "README must disclose the expected 0.35 RF/Seed production funding gap");
 assert.equal(readme.includes("fifteen `buy → play → settle → redeem`"), false,
   "README must not claim all 15 garden cycles redeem a bloom");
 assert.equal((readme.match(/\| `simulate\.mjs` \|/g) ?? []).length, 1,
