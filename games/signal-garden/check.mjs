@@ -216,7 +216,9 @@ async function run(width, extended = false) {
       });
       assert.deepEqual(problems, []);
       assert.equal(await game.locator("nav,.rf-game-frame").count(), 0, "Game must not contain app scaffolding");
-      assert.match(await game.locator(".signal-metrics").textContent(), /SEEDS0SIM RF SPENT3/);
+      const expectedSpend = extended ? "15" : "3";
+      assert.match(await game.locator(".signal-metrics").textContent(),
+        new RegExp(`SEEDS0SIM RF SPENT${expectedSpend}`));
       const spentMetric = game.locator(".signal-metrics>span").filter({ hasText: "RF SPENT" });
       assert.equal(await spentMetric.isVisible(), true,
         "Cumulative RF spend must remain visible in the HUD, including the 360px layout");
