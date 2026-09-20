@@ -125,8 +125,15 @@ const maxReward = game.outcomes.reduce(
 assert.equal(expected, 850_000_000_000_000_000n);
 assert.equal(maxReward, 2_500_000_000_000_000_000n);
 
+assert.equal(deployWorkflow.includes("    paths:"), false,
+  "Deploy must run on every main push so SOURCE_COMMIT.txt cannot lag main");
+assert.equal(deployWorkflow.includes("cache: npm"), false,
+  "Deploy must not rely on mutable npm caches");
+assert.equal(checkWorkflow.includes("cache: npm"), false,
+  "SDK CI must not rely on mutable npm caches");
 for (const phrase of [
   "/tmp/signal-garden-expected-files.txt",
+  ".nojekyll",
   "SOURCE_COMMIT.txt",
   "LICENSE",
   "NOTICE.md",

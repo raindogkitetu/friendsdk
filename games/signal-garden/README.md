@@ -253,7 +253,10 @@ Signal Garden uses the official FriendSDK v0.1.2 runtime. The fork's `src/`,
 `contracts/`, `assets/`, license/notice, package manifest/lockfile and runtime
 build helpers are unchanged from official release commit `762d6f58a73ace723f7f82dc1a61bfa036c21edc`. Both CI
 and public deployment run a direct `git diff --exit-code` against that commit on
-those protected paths before proceeding.
+those protected paths before proceeding. The preview deploy runs on **every** push
+to `main`, and `SOURCE_COMMIT.txt` is created and allowlisted before publication,
+so a documentation/test-only main commit cannot silently leave the hosted provenance
+behind.
 
 Changes outside `games/signal-garden/` are limited to CI/deploy wiring and
 test-only synchronization/readiness fixes. Modified official test/workflow files
