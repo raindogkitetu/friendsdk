@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GameComponentProps } from "@rarefriends/friendsdk/runtime";
 import { GameMenu } from "@rarefriends/friendsdk/frame";
 import { formatGameAmount } from "@rarefriends/friendsdk/ui";
-import { maximumPrize, type GamePlay, type GameSnapshot } from "@rarefriends/friendsdk/game";
+import { expectedReward, maximumPrize, type GamePlay, type GameSnapshot } from "@rarefriends/friendsdk/game";
 import {
   createFriendReader,
   spriteFrame,
@@ -219,6 +219,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   const currencyLabel = snapshot.mode === "preview" ? "sim RF" : "RF";
   const displayRf = (value: bigint) => `${formatGameAmount(value, 18)} ${currencyLabel}`;
   const maxPrize = maximumPrize(definition);
+  const expectedHarvest = expectedReward(definition);
   const emptyCount = plots.filter(plot => !plot).length;
   const totalBlooms = plots.length - emptyCount;
   const canBuy = emptyCount > 0 && snapshot.rfBalance >= definition.price && snapshot.freeStake >= maxPrize &&
@@ -373,7 +374,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         <button type="button" className="rf-frame-primary" disabled={!canBuy || busy || paused || syncRequired} onClick={buySeed}>Buy one Signal Seed · {displayRf(definition.price)}</button>
         {!canBuy && <p>{emptyCount === 0 ? "Harvest a bloom to open a plot first." : snapshot.rfBalance < definition.price ?
           "Not enough simulated RF." : "New seeds are paused until the reward reserve has room."}</p>}
-        <small>Every seed reserves {displayRf(maxPrize)}. Expected harvest value is 0.85 RF. The 10% burn + 5% seasonal-vault split is a Signal Garden prototype model, not a claim about current Rare Friends protocol routing.</small>
+        <small>Every seed reserves {displayRf(maxPrize)}. Expected harvest value is {displayRf(expectedHarvest)}. The 10% burn + 5% seasonal-vault split is a Signal Garden prototype model, not a claim about current Rare Friends protocol routing.</small>
       </div> : menu === "reveal" && result?.outcomeId && revealedOutcome && selectedPlot !== null ? <div className="signal-reveal">
         <div className="signal-reveal-art"><BloomGlyph outcomeId={result.outcomeId} large/><span className="signal-rays" aria-hidden="true"/></div>
         <small>PLOT {selectedPlot + 1} · {revealedOutcome.chanceBps / 100}% SIGNAL</small>
@@ -401,7 +402,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
             }}>Harvest one</button></div>;
         })}</div>
       </div> : menu === "activity" ? <div className="signal-menu signal-activity">
-        <p>Each acquired Signal Seed records 1 RF of repeat activity. Harvesting reopens a scarce plot, so the same Friend can keep growing without erasing prior spend.</p>
+        <p>Each acquired Signal Seed records 1 {currencyLabel} of repeat activity. Harvesting reopens a scarce plot, so the same Friend can keep growing without erasing prior spend.</p>
         <div className="signal-activity-total"><small>{snapshot.mode === "preview" ? "SIMULATED SESSION SPEND" : "RECORDED RF SPEND"}</small><strong>{displayRf(sessionSpend)}</strong></div>
         <div className="signal-activity-grid">
           <div><small>SEEDS ACQUIRED</small><strong>{acquiredSeeds.toString()}</strong></div>
@@ -417,7 +418,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         </div>
         <p className="signal-activity-note"><strong>Signal Garden model only.</strong> The preview spends no live RF and performs no burn or vault transfer. Current Rare Friends public docs describe general gameplay payments as 50% burn / 50% rewards; this entry's 10% burn + 5% vault concept is not current protocol routing. Any live version must be redesigned and reviewed against the then-current rules, with every reward fully funded and explicit wallet confirmations.</p>
       </div> : menu === "rules" ? <div className="signal-menu signal-rules">
-        <p><strong>1.</strong> Buy a 1 RF Signal Seed. <strong>2.</strong> Choose an empty plot. <strong>3.</strong> Keep the revealed bloom for harmony, or harvest its fixed RF value.</p>
+        <p><strong>1.</strong> Buy a {displayRf(definition.price)} Signal Seed. <strong>2.</strong> Choose an empty plot. <strong>3.</strong> Keep the revealed bloom for harmony, or harvest its fixed {currencyLabel} value.</p>
         <p>Your verified <strong>{sprites.familyName} Friend #{friendId.toString()}</strong> is the heart of this garden. Its on-chain family makes <strong>{affinity.name}</strong> its affinity; its seed marks three glowing signal plots. Affinity blooms and signal plots add non-financial harmony bonuses. They never change the published RF odds.</p>
         <p>A full garden has twelve blooms. Harvesting opens a plot so the loop can continue. Bloom discovery remains recorded after harvest, and session resonance advances at 3, 6, 12 and 24 settled signals. These goals are non-financial and never change odds or rewards.</p>
         <p>The garden layout, discovery and resonance are session-local; a full runtime reload resets them. The SDK ledger retains kept items only during the runtime session.</p>
