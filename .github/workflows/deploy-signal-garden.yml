@@ -37,6 +37,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run build
       - run: npx friendsdk check games/signal-garden
+      - run: node games/signal-garden/audit.mjs
       - run: node games/signal-garden/simulate.mjs
       - run: npx playwright install --with-deps chromium
       - run: node games/signal-garden/check.mjs

@@ -26,6 +26,8 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run check:games
+      - run: node games/signal-garden/audit.mjs
+      - run: node games/signal-garden/simulate.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run check:browser
       - run: node games/signal-garden/check.mjs

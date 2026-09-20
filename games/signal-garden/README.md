@@ -263,6 +263,8 @@ input to actually resume instead of assuming a fixed 150 ms scheduler delay.
 | `game.json` | Exact RF price, outcome weights and fixed rewards |
 | `simulate.mjs` | Deterministic economy assertions |
 | `check.mjs` | Focused browser flows at 960, 760, 521 and 360 px; 960 also runs the full 15-signal loop |
+| `simulate.mjs` | SDK-ledger bankroll stress proof |
+| `audit.mjs` | Prevents stale economy/rules/docs/test claims from drifting back in |
 
 ## Credits
 
