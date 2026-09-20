@@ -341,7 +341,10 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         <p>A full garden has twelve blooms. Harvesting opens a plot so the loop can continue. Bloom discovery remains recorded after harvest, and session resonance advances at 3, 6, 12 and 24 settled signals. These goals are non-financial and never change odds or rewards.</p>
         <p>The garden layout, discovery and resonance are session-local; a full runtime reload resets them. The SDK ledger retains kept items only during the runtime session.</p>
         <p><strong>Everything is simulated.</strong> No RF, signature or transaction is used in this preview. A production version would require a reviewed contract and explicit wallet confirmations.</p>
-        <button type="button" onClick={() => navigate("activity")}>View activity receipt</button>
+        <div className="signal-menu-actions">
+          <button type="button" onClick={() => navigate("collection")}>View collection</button>
+          <button type="button" onClick={() => navigate("activity")}>View activity receipt</button>
+        </div>
       </div> : menu === "settings" ? <div className="signal-menu">
         <label><input type="checkbox" checked={reducedMotion} onChange={event => setReducedMotion(event.target.checked)}/> Reduce motion</label>
         <p>Signal Garden is silent by design. Reduced motion freezes the Friend's idle animation, orbit pulses and bloom effects.</p>

@@ -96,8 +96,10 @@ async function run(width) {
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
 
       // Discovery is historical for the session: harvesting the first bloom must
-      // not erase it from the discovered set.
-      await game.getByRole("button", { name: /Collection/, exact: false }).click();
+      // not erase it from the discovered set. Enter through Guide so the path is
+      // also available in the 360px layout where the dock collection button hides.
+      await game.getByRole("button", { name: "Guide", exact: true }).click();
+      await game.getByRole("button", { name: "View collection", exact: true }).click();
       const discoveredRow = game.locator(".signal-collection>div").filter({ hasText: firstBloom });
       await discoveredRow.waitFor();
       assert.match(await discoveredRow.textContent(), /discovered/);
