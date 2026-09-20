@@ -101,6 +101,9 @@ async function run(width) {
       assert.deepEqual(problems, []);
       assert.equal(await game.locator("nav,.rf-game-frame").count(), 0, "Game must not contain app scaffolding");
       assert.match(await game.locator(".signal-metrics").textContent(), /SEEDS0RF SPENT2/);
+      const spentMetric = game.locator(".signal-metrics>span").filter({ hasText: "RF SPENT" });
+      assert.equal(await spentMetric.isVisible(), true,
+        "Cumulative RF spend must remain visible in the HUD, including the 360px layout");
     },
   });
   console.log(`PASS Signal Garden full loop at ${width}px: buy, pending recovery, reveal, keep, inspect, harvest, activity receipt, settings and bounds.`);

@@ -1,0 +1,63 @@
+name: Deploy Signal Garden preview
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "games/signal-garden/**"
+      - "src/**"
+      - "assets/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-signal-garden.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: signal-garden-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npx friendsdk check games/signal-garden
+      - run: node games/signal-garden/simulate.mjs
+      - run: node scripts/dev-game.mjs build games/signal-garden
+
+      - name: Verify static preview
+        run: |
+          test -f games/signal-garden/.friendsdk/index.html
+          test -f games/signal-garden/.friendsdk/game.html
+          test -f games/signal-garden/.friendsdk/game.js
+          test -f games/signal-garden/.friendsdk/game.css
+
+      - name: Publish gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd games/signal-garden/.friendsdk
+          touch .nojekyll
+          git init
+          git checkout -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Deploy Signal Garden preview"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin gh-pages

@@ -11,6 +11,23 @@ the fixed SDK action client and pause state.
 
 ![Signal Garden at desktop size](media/signal-garden-960.png)
 
+## Economy at a glance
+
+The core loop is deliberately easy to audit. The HUD keeps cumulative simulated RF
+spend visible even on the 360 px layout, while the activity receipt shows the
+corresponding production-model allocation without claiming that a live burn occurred.
+
+| For every 10 simulated Signal Seeds | Amount |
+| --- | ---: |
+| Gross RF activity | 10 RF |
+| Expected harvest liability | 8.5 RF |
+| Proposed burn | 1 RF |
+| Proposed seasonal vault | 0.5 RF |
+
+Harvesting does not reduce the gross-spend counter. It reopens scarce garden space,
+so repeat play increases visible RF activity while every reward remains fixed and
+fully described.
+
 ## Why the Friend matters
 
 The selected Generations NFT is the center of the experience, not an avatar pasted
