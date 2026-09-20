@@ -227,6 +227,14 @@ the SDK's read-only test fixture. It verifies:
 Mock identity and RPC responses exist only inside the automated test harness. Normal
 development and static builds require a real eligible wallet.
 
+### Fork integrity
+
+Signal Garden uses the official FriendSDK v0.1.2 runtime. The fork's `src/`,
+`contracts/`, `assets/`, package manifest/lockfile and runtime build helpers are
+unchanged from the official v0.1.2 tag. Changes outside `games/signal-garden/` are
+limited to CI/deploy wiring and a browser-test synchronization fix that waits for
+input to actually resume instead of assuming a fixed 150 ms scheduler delay.
+
 ## Known limits and safety
 
 - The economy is simulated. The displayed 50% burn / 50% rewards values are

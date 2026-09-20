@@ -2,6 +2,9 @@ name: SDK and game checks
 on: [push, pull_request]
 permissions:
   contents: read
+concurrency:
+  group: sdk-game-checks-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   check:
     runs-on: ubuntu-latest
