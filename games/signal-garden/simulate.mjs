@@ -27,41 +27,50 @@ assert.equal(maxPrize, 2_500_000_000_000_000_000n);
 assert.equal(price - expected, proposedBurn + proposedSeasonVault);
 assert.equal(previewStake, 25n * RF);
 
-async function runPath(name, roll) {
+async function runGardenPath(name, roll) {
   const { client } = createGamePreview(definition, {
     stake: previewStake,
     rfBalance: previewBalance,
     friendId: 7730n,
     draw: () => roll,
   });
+  const kept = [];
   for (let signal = 1; signal <= 15; signal++) {
+    // The real UI keeps blooms until the 12-slot garden is full. For signals
+    // 13-15 it harvests exactly one kept bloom to reopen one slot, then buys.
+    if (signal > 12) {
+      const outcomeId = kept.shift();
+      assert(outcomeId, name + ": a kept bloom must exist to reopen a slot");
+      await client.redeem(outcomeId, 1n);
+    }
     assert.equal(await client.canBuy(1n), true, name + ": seed " + signal + " must remain backed");
     await client.buy(1n);
     const [play] = await client.play(1n);
     assert(play, name + ": seed " + signal + " must create one play");
     const settled = await client.settle(play.id);
     assert.notEqual(settled.outcomeId, null, name + ": seed " + signal + " must settle");
-    await client.redeem(settled.outcomeId, 1n);
+    kept.push(settled.outcomeId);
   }
   const state = await client.read();
   assert.equal(state.consumables, 0n);
   assert.equal(state.plays.length, 15);
   assert(state.plays.every(play => play.outcomeId !== null));
-  assert(state.inventory.every(quantity => quantity === 0n));
+  assert.equal(state.inventory.reduce((sum, quantity) => sum + quantity, 0n), 12n);
   assert.equal(state.reservedPlays, 0n);
-  assert.equal(state.rewardLiability, 0n);
-  assert.equal(state.freeStake, state.stake);
+  assert.equal(state.freeStake, state.stake - state.rewardLiability);
   return state;
 }
 
 // Roll 9999 always selects Starbloom (2.5 RF), the house-bankroll worst case.
-const maxPath = await runPath("maximum-reward path", 9_999);
-assert.equal(maxPath.rfBalance, 42_500_000_000_000_000_000n);
+const maxPath = await runGardenPath("maximum-reward path", 9_999);
+assert.equal(maxPath.rfBalance, 12_500_000_000_000_000_000n);
+assert.equal(maxPath.rewardLiability, 30n * RF);
 assert.equal(maxPath.freeStake, 2_500_000_000_000_000_000n);
 
 // Roll 0 always selects Dewbud (0.4 RF), the player-balance worst case.
-const minPath = await runPath("minimum-reward path", 0);
-assert.equal(minPath.rfBalance, 11n * RF);
+const minPath = await runGardenPath("minimum-reward path", 0);
+assert.equal(minPath.rfBalance, 6_200_000_000_000_000_000n);
+assert.equal(minPath.rewardLiability, 4_800_000_000_000_000_000n);
 assert.equal(minPath.freeStake, 34n * RF);
 
 console.log(JSON.stringify({
@@ -73,8 +82,10 @@ console.log(JSON.stringify({
   previewPrizeStakeRF: Number(previewStake) / Number(RF),
   maxRewardPathFreeStakeAfter15RF: Number(maxPath.freeStake) / Number(RF),
   maxRewardPathPlayerBalanceAfter15RF: Number(maxPath.rfBalance) / Number(RF),
+  maxRewardPathKeptLiabilityAfter15RF: Number(maxPath.rewardLiability) / Number(RF),
   minRewardPathFreeStakeAfter15RF: Number(minPath.freeStake) / Number(RF),
   minRewardPathPlayerBalanceAfter15RF: Number(minPath.rfBalance) / Number(RF),
+  minRewardPathKeptLiabilityAfter15RF: Number(minPath.rewardLiability) / Number(RF),
   guaranteedPeakResonanceSignals: 15,
   proposedBurnRF: Number(proposedBurn) / Number(RF),
   proposedSeasonVaultRF: Number(proposedSeasonVault) / Number(RF),
