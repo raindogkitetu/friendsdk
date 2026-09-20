@@ -117,10 +117,10 @@ The score rewards garden composition without making an undisclosed financial cla
 
 ## Proposed production economy
 
-The preview's 85% expected harvest leaves 0.15 RF per 1 RF seed. A reviewed live
-version would route that amount transparently:
+The preview's 85% expected harvest leaves 0.15 RF per simulated 1 RF seed purchase.
+A reviewed live version would route that purchase amount transparently:
 
-- **0.10 RF (10%) burned** per planted seed.
+- **0.10 RF (10%) burned** per seed purchase.
 - **0.05 RF (5%) sent to a seasonal vault** funding community garden goals and
   fully covered season rewards.
 - **0.85 RF expected harvest value**, while every possible reward remains fully reserved at its published maximum.
@@ -143,7 +143,8 @@ No live contract or transaction flow is included in this submission.
 
 The model creates three aligned loops:
 
-1. Every planting is RF activity rather than an idle points claim.
+1. Every seed purchase is RF activity; planting consumes the prepaid seed rather
+   than charging RF a second time.
 2. The burn is proportional and predictable instead of depending on player losses.
 3. Kept blooms personalize the Friend, while harvesting returns the published fixed
    value and reopens scarce garden space.
