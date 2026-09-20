@@ -81,3 +81,56 @@ export function gardenFromInventory(inventory: readonly bigint[]) {
   });
   return plots;
 }
+
+/** Reconcile local presentation with the verified host inventory after an action error or resync. */
+export function reconcileGardenWithInventory(
+  plots: readonly (GardenBloom | null)[],
+  inventory: readonly bigint[],
+  preferredPlot: number | null = null,
+) {
+  const next: (GardenBloom | null)[] = Array.from(
+    { length: PLOT_COUNT }, (_, index) => plots[index] ?? null,
+  );
+  const desired = inventory.map(quantity =>
+    Number(quantity > BigInt(PLOT_COUNT) ? BigInt(PLOT_COUNT) : quantity));
+
+  // Remove impossible or excess local blooms first. When the caller knows which
+  // plot an action targeted, prefer removing that exact plot.
+  next.forEach((bloom, index) => {
+    if (bloom && (bloom.outcomeId < 1 || bloom.outcomeId > desired.length)) next[index] = null;
+  });
+  desired.forEach((count, outcomeIndex) => {
+    const outcomeId = outcomeIndex + 1;
+    const indexes = next.flatMap((bloom, index) => bloom?.outcomeId === outcomeId ? [index] : []);
+    let excess = indexes.length - count;
+    if (excess > 0 && preferredPlot !== null && indexes.includes(preferredPlot)) {
+      next[preferredPlot] = null;
+      excess--;
+    }
+    for (let cursor = indexes.length - 1; excess > 0 && cursor >= 0; cursor--) {
+      const index = indexes[cursor];
+      if (index === preferredPlot || next[index]?.outcomeId !== outcomeId) continue;
+      next[index] = null;
+      excess--;
+    }
+  });
+
+  const missing: number[] = [];
+  desired.forEach((count, outcomeIndex) => {
+    const outcomeId = outcomeIndex + 1;
+    const present = next.filter(bloom => bloom?.outcomeId === outcomeId).length;
+    for (let index = present; index < count; index++) missing.push(outcomeId);
+  });
+  let serial = 0;
+  for (const outcomeId of missing) {
+    let target = -1;
+    if (preferredPlot !== null && preferredPlot >= 0 && preferredPlot < PLOT_COUNT && !next[preferredPlot]) {
+      target = preferredPlot;
+    } else {
+      target = next.findIndex(bloom => !bloom);
+    }
+    if (target < 0) break;
+    next[target] = { outcomeId, playId: `synced-${outcomeId}-${serial++}` };
+  }
+  return next;
+}

@@ -13,14 +13,15 @@ the fixed SDK action client and pause state.
 
 ## Economy at a glance
 
-The core loop is deliberately easy to audit. The HUD keeps cumulative simulated RF
-spend visible even on the 360 px layout, while the activity receipt shows the
+The core loop is deliberately easy to audit. Preview currency is labeled **sim RF**
+in the HUD and action controls, and cumulative simulated RF spend stays visible
+even on the 360 px layout, while the activity receipt shows the
 corresponding production-model allocation without claiming that a live burn occurred.
 
 | For every 10 simulated Signal Seeds | Amount |
 | --- | ---: |
 | Gross RF activity | 10 RF |
-| Expected harvest liability | 8.5 RF |
+| Expected harvest value | 8.5 RF |
 | Proposed burn | 1 RF |
 | Proposed seasonal vault | 0.5 RF |
 
@@ -48,7 +49,7 @@ over an unrelated game:
 1. Connect a browser wallet on Robinhood mainnet (chain 4663) that owns a hardwired
    Generations NFT, generation 1 or higher.
 2. Select a Friend.
-3. Choose **Buy a seed · 1 RF** and approve the in-frame simulated action.
+3. Choose **Buy a seed · 1 sim RF** and approve the in-frame simulated action.
 4. Choose any empty plot. Planting consumes one seed and reveals one bloom.
 5. Keep the bloom for harmony or harvest its fixed simulated RF value.
 6. Fill all twelve plots, or harvest blooms to reopen space and continue.
@@ -117,7 +118,7 @@ version would route that amount transparently:
 - **0.10 RF (10%) burned** per planted seed.
 - **0.05 RF (5%) sent to a seasonal vault** funding community garden goals and
   fully covered season rewards.
-- **0.85 RF expected harvest liability**, with each possible reward fully reserved.
+- **0.85 RF expected harvest value**, while every possible reward remains fully reserved at its published maximum.
 
 This split is a labeled **Signal Garden prototype model**, not a live burn, a
 promise, or a description of current Rare Friends protocol routing. FriendSDK
@@ -191,7 +192,9 @@ the SDK's read-only test fixture. It verifies:
 - wallet/Friend-gated runtime startup and canonical artwork;
 - seed purchase and confirmation;
 - interrupted settlement recovery without a second seed or play confirmation,
-  preserving the originally selected plot within the active frame session;
+  preserving the originally selected plot and rejecting relocation while pending;
+- post-action read failure recovery: one failed read retries automatically, while
+  repeated read failure blocks further economy actions until verified refresh;
 - reveal, keep, plot inspection and harvest;
 - token-activity receipt, always-visible mobile RF spend, session resonance,
   bloom discovery, guide and reduced-motion controls;

@@ -15,6 +15,7 @@ import {
   BLOOMS,
   bloomScore,
   gardenFromInventory,
+  reconcileGardenWithInventory,
   PLOT_COUNT,
   signalPlots,
   totalGardenScore,
@@ -27,7 +28,6 @@ const friendReader = createFriendReader();
 const RING_CELLS = [1, 2, 3, 4, 8, 12, 16, 15, 14, 13, 9, 5] as const;
 type Menu = "shop" | "collection" | "activity" | "rules" | "settings" | "reveal" | "plot" | null;
 
-const rf = (value: bigint) => `${formatGameAmount(value, 18)} RF`;
 const errorMessage = (cause: unknown) => cause instanceof Error ? cause.message : "The preview action failed.";
 
 function BloomGlyph({ outcomeId, large = false }: Readonly<{ outcomeId: number; large?: boolean }>) {
@@ -94,7 +94,7 @@ function FriendPortrait({ sprites, reducedMotion, bloomCount }: Readonly<{
     paint(0);
     return () => cancelAnimationFrame(animation);
   }, [sprites, reducedMotion, bloomCount]);
-  return <canvas ref={canvas} width="192" height="192"
+  return <canvas ref={canvas} width="192" height="192" role="img"
     aria-label={`${sprites.familyName} Rare Friend, animated from its canonical on-chain sprite`} />;
 }
 
@@ -108,18 +108,21 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   const [pendingPlot, setPendingPlot] = useState<number | null>(null);
   const [result, setResult] = useState<GamePlay | null>(null);
   const [busy, setBusy] = useState(false);
+  const [syncRequired, setSyncRequired] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [reducedMotion, setReducedMotion] = useState(false);
   const [revision, setRevision] = useState(0);
   const locked = useRef(false), epoch = useRef(0);
+  const deferredAfter = useRef<((state: GameSnapshot) => void) | null>(null);
   const definition = client.definition;
 
   useEffect(() => {
     const version = ++epoch.current;
     locked.current = false;
     setSnapshot(null); setSprites(null); setMenu(null); setSelectedPlot(null); setPendingPlot(null); setResult(null);
-    setBusy(false); setError(""); setMessage("");
+    deferredAfter.current = null;
+    setBusy(false); setSyncRequired(false); setError(""); setMessage("");
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const updatePreference = () => setReducedMotion(preference.matches);
     updatePreference(); preference.addEventListener("change", updatePreference);
@@ -131,18 +134,73 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     return () => { epoch.current++; preference.removeEventListener("change", updatePreference); };
   }, [client, friendId, revision]);
 
-  async function act<T>(work: () => Promise<T>, after?: (output: T, state: GameSnapshot) => void) {
+  async function readWithRetry() {
+    try { return await client.read(); }
+    catch { return client.read(); }
+  }
+
+  function applyVerifiedState(state: GameSnapshot, recoveryPlot: number | null = null) {
+    setSnapshot(state);
+    const deferred = deferredAfter.current;
+    deferredAfter.current = null;
+    if (deferred) deferred(state);
+    else setPlots(current => reconcileGardenWithInventory(current, state.inventory, recoveryPlot));
+    setSyncRequired(false);
+  }
+
+  async function refreshVerifiedState() {
     if (locked.current || paused) return;
     const version = epoch.current;
     locked.current = true; setBusy(true); setError(""); setMessage("");
     try {
-      const output = await work();
-      const state = await client.read();
-      if (version === epoch.current) { setSnapshot(state); after?.(output, state); }
-    } catch (cause) {
+      const state = await readWithRetry();
       if (version === epoch.current) {
-        try { setSnapshot(await client.read()); } catch { /* Keep the last verified snapshot. */ }
-        setError(errorMessage(cause));
+        applyVerifiedState(state, pendingPlot);
+        setMessage("Verified state refreshed.");
+      }
+    } catch {
+      if (version === epoch.current) {
+        setSyncRequired(true);
+        setError("Verified state is still unavailable. No further economy action will run until refresh succeeds.");
+      }
+    } finally {
+      if (version === epoch.current) { locked.current = false; setBusy(false); }
+    }
+  }
+
+  async function act<T>(
+    work: () => Promise<T>,
+    after?: (output: T, state: GameSnapshot) => void,
+    recoveryPlot: number | null = null,
+  ) {
+    if (locked.current || paused || syncRequired) return;
+    const version = epoch.current;
+    locked.current = true; setBusy(true); setError(""); setMessage("");
+    try {
+      let output: T;
+      try {
+        output = await work();
+        deferredAfter.current = after ? state => after(output, state) : null;
+      } catch (cause) {
+        deferredAfter.current = null;
+        try {
+          const state = await readWithRetry();
+          if (version === epoch.current) applyVerifiedState(state, recoveryPlot);
+        } catch {
+          if (version === epoch.current) setSyncRequired(true);
+        }
+        if (version === epoch.current) setError(errorMessage(cause));
+        return;
+      }
+
+      try {
+        const state = await readWithRetry();
+        if (version === epoch.current) applyVerifiedState(state, recoveryPlot);
+      } catch {
+        if (version === epoch.current) {
+          setSyncRequired(true);
+          setError("The action may have completed, but its latest state could not be verified. Refresh state before continuing.");
+        }
       }
     } finally {
       if (version === epoch.current) { locked.current = false; setBusy(false); }
@@ -157,6 +215,8 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   </div>;
 
   const pending = snapshot.plays.find(play => play.outcomeId === null);
+  const currencyLabel = snapshot.mode === "preview" ? "sim RF" : "RF";
+  const displayRf = (value: bigint) => `${formatGameAmount(value, 18)} ${currencyLabel}`;
   const maxPrize = maximumPrize(definition);
   const emptyCount = plots.filter(plot => !plot).length;
   const totalBlooms = plots.length - emptyCount;
@@ -203,7 +263,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
       } : plot));
       setPendingPlot(null);
       setSelectedPlot(plotIndex); setResult(settled); setMenu("reveal");
-    });
+    }, plotIndex);
   };
   const harvest = (plotIndex: number, outcomeId: number) => void act(
     () => client.redeem(outcomeId, 1n),
@@ -212,17 +272,23 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
       setMessage(`${BLOOMS[outcomeId - 1]?.name ?? "Bloom"} harvested back to simulated RF.`);
       setResult(null); setSelectedPlot(null); setMenu(null);
     },
+    plotIndex,
   );
   const clickPlot = (plotIndex: number) => {
     if (busy || paused) return;
     const bloom = plots[plotIndex];
     setSelectedPlot(plotIndex);
     if (bloom) { setMenu("plot"); return; }
-    if (pending || snapshot.consumables > 0n) plant(plotIndex);
+    if (pending && pendingPlot !== null && plotIndex !== pendingPlot) {
+      setMessage(`The pending signal belongs to plot ${pendingPlot + 1}. Resume it there.`);
+      return;
+    }
+    if (pending || snapshot.consumables > 0n) plant(pendingPlot ?? plotIndex);
     else setMenu("shop");
   };
   const firstEmpty = plots.findIndex(plot => !plot);
-  const status = error || message || (busy ? "Waiting for preview confirmation…" :
+  const status = error || message || (syncRequired ? "Verified state must be refreshed before another economy action." :
+    busy ? "Waiting for preview confirmation…" :
     pending && pendingPlot !== null ? `Signal pending for plot ${pendingPlot + 1}. Resume it—no second seed is spent.` :
     pending ? "A signal is pending. Choose an empty plot to resume it—no second seed is spent." :
     snapshot.consumables > 0n ? "Seed ready. Choose an empty plot." : "Buy a seed, then choose where it grows.");
@@ -235,9 +301,9 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     <header className="signal-header">
       <div className="signal-brand"><span aria-hidden="true">✦</span><div><strong>SIGNAL GARDEN</strong><small>Friend #{friendId.toString()}</small></div></div>
       <div className="signal-metrics" aria-label="Garden status">
-        <span><small>RF</small><strong>{formatGameAmount(snapshot.rfBalance, 18)}</strong></span>
+        <span><small>{snapshot.mode === "preview" ? "SIM RF" : "RF"}</small><strong>{formatGameAmount(snapshot.rfBalance, 18)}</strong></span>
         <span><small>SEEDS</small><strong>{snapshot.consumables.toString()}</strong></span>
-        <span><small>RF SPENT</small><strong>{formatGameAmount(sessionSpend, 18)}</strong></span>
+        <span><small>{snapshot.mode === "preview" ? "SIM RF SPENT" : "RF SPENT"}</small><strong>{formatGameAmount(sessionSpend, 18)}</strong></span>
       </div>
       <button type="button" onClick={() => navigate("rules")}>Guide</button>
       <button type="button" aria-label="Settings" onClick={() => navigate("settings")}>···</button>
@@ -253,7 +319,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
           const anchor = anchors.includes(plotIndex);
           return <button type="button" key={plotIndex} data-testid={`plot-${plotIndex + 1}`}
             className={`signal-plot ${bloom ? `signal-filled signal-tone-${meta?.tone}` : "signal-empty"}${anchor ? " signal-anchor" : ""}`}
-            style={{ gridColumn: column, gridRow: row }} disabled={busy || paused}
+            style={{ gridColumn: column, gridRow: row }} disabled={busy || paused || syncRequired}
             aria-label={bloom ? `Plot ${plotIndex + 1}, ${meta?.name}, inspect` :
               `Plot ${plotIndex + 1}, empty${anchor ? ", signal plot" : ""}, plant here`}
             onClick={() => clickPlot(plotIndex)}>
@@ -276,66 +342,69 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     <footer className="signal-dock">
       <button type="button" onClick={() => navigate("collection")}><span>Collection</span><strong>{discoveredBloomCount}/4</strong></button>
       <div className="signal-action">
-        <button type="button" className="signal-primary" disabled={busy || paused || firstEmpty < 0}
-          onClick={() => pending && pendingPlot !== null ? plant(pendingPlot) :
+        <button type="button" className="signal-primary"
+          disabled={busy || paused || (!syncRequired && firstEmpty < 0)}
+          onClick={() => syncRequired ? void refreshVerifiedState() :
+            pending && pendingPlot !== null ? plant(pendingPlot) :
             pending ? setMessage("Choose an empty plot to place the pending signal.") :
             snapshot.consumables > 0n ? setMessage("Choose any empty plot around your Friend.") : navigate("shop")}>
-          {pending && pendingPlot !== null ? "Resume signal" : pending ? "Choose resume plot" :
-            snapshot.consumables > 0n ? "Choose a plot" : "Buy a seed · 1 RF"}
+          {syncRequired ? "Refresh state" : pending && pendingPlot !== null ? "Resume signal" :
+            pending ? "Choose resume plot" : snapshot.consumables > 0n ? "Choose a plot" :
+            `Buy a seed · 1 ${currencyLabel}`}
         </button>
         <p className={error ? "signal-error" : ""} role={error ? "alert" : "status"} aria-live="polite">{status}</p>
       </div>
       <button type="button" className="signal-model" onClick={() => navigate("activity")}
-        aria-label={`Open token activity receipt, ${rf(sessionSpend)} simulated RF spent`}>
-        <span>SIMULATED ACTIVITY</span><small>{rf(sessionSpend)} spent · 10% burn + 5% vault proposed</small>
+        aria-label={`Open token activity receipt, ${displayRf(sessionSpend)} spent`}>
+        <span>{snapshot.mode === "preview" ? "SIMULATED ACTIVITY" : "RF ACTIVITY"}</span><small>{displayRf(sessionSpend)} spent · 10% burn + 5% vault proposed</small>
       </button>
     </footer>
 
     {menu && <GameMenu title={menuTitle} onClose={busy ? undefined : () => navigate(null)}>
       {menu === "shop" ? <div className="signal-menu">
-        <p>Each Signal Seed costs <strong>{rf(definition.price)}</strong>. Planting consumes one seed and reveals one redeemable bloom.</p>
+        <p>Each Signal Seed costs <strong>{displayRf(definition.price)}</strong>. Planting consumes one seed and reveals one redeemable bloom.</p>
         <table><thead><tr><th>Bloom</th><th>Chance</th><th>Harvest</th></tr></thead><tbody>
           {definition.outcomes.map((outcome, index) => <tr key={outcome.name}><td><BloomGlyph outcomeId={index + 1}/>{outcome.name}</td>
-            <td>{outcome.chanceBps / 100}%</td><td>{rf(outcome.reward)}</td></tr>)}
+            <td>{outcome.chanceBps / 100}%</td><td>{displayRf(outcome.reward)}</td></tr>)}
         </tbody></table>
-        <button type="button" className="rf-frame-primary" disabled={!canBuy || busy || paused} onClick={buySeed}>Buy one Signal Seed · {rf(definition.price)}</button>
+        <button type="button" className="rf-frame-primary" disabled={!canBuy || busy || paused || syncRequired} onClick={buySeed}>Buy one Signal Seed · {displayRf(definition.price)}</button>
         {!canBuy && <p>{emptyCount === 0 ? "Harvest a bloom to open a plot first." : snapshot.rfBalance < definition.price ?
           "Not enough simulated RF." : "New seeds are paused until the reward reserve has room."}</p>}
-        <small>Every seed reserves {rf(maxPrize)}. Expected harvest value is 0.85 RF. The 10% burn + 5% seasonal-vault split is a Signal Garden prototype model, not a claim about current Rare Friends protocol routing.</small>
+        <small>Every seed reserves {displayRf(maxPrize)}. Expected harvest value is 0.85 RF. The 10% burn + 5% seasonal-vault split is a Signal Garden prototype model, not a claim about current Rare Friends protocol routing.</small>
       </div> : menu === "reveal" && result?.outcomeId && revealedOutcome && selectedPlot !== null ? <div className="signal-reveal">
         <div className="signal-reveal-art"><BloomGlyph outcomeId={result.outcomeId} large/><span className="signal-rays" aria-hidden="true"/></div>
         <small>PLOT {selectedPlot + 1} · {revealedOutcome.chanceBps / 100}% SIGNAL</small>
         <h3>{revealedOutcome.name}</h3>
         <p>{BLOOMS[result.outcomeId - 1]?.lore}</p>
-        <p className="signal-reveal-score">+{bloomScore(result.outcomeId, selectedPlot, sprites.familyId, sprites.seed)} harmony · {rf(revealedOutcome.reward)} harvest value</p>
+        <p className="signal-reveal-score">+{bloomScore(result.outcomeId, selectedPlot, sprites.familyId, sprites.seed)} harmony · {displayRf(revealedOutcome.reward)} harvest value</p>
         <div className="signal-menu-actions"><button type="button" className="rf-frame-primary" disabled={busy || paused} onClick={() => navigate(null)}>Keep in garden</button>
-          <button type="button" disabled={busy || paused} onClick={() => harvest(selectedPlot, result.outcomeId!)}>Harvest · {rf(revealedOutcome.reward)}</button></div>
+          <button type="button" disabled={busy || paused || syncRequired} onClick={() => harvest(selectedPlot, result.outcomeId!)}>Harvest · {displayRf(revealedOutcome.reward)}</button></div>
       </div> : menu === "plot" && selectedBloom && selectedPlot !== null ? <div className="signal-inspect">
         <BloomGlyph outcomeId={selectedBloom.outcomeId} large/>
         <small>PLOT {selectedPlot + 1}{anchors.includes(selectedPlot) ? " · SIGNAL PLOT" : ""}</small>
         <h3>{BLOOMS[selectedBloom.outcomeId - 1]?.name}</h3>
         <p>{BLOOMS[selectedBloom.outcomeId - 1]?.lore}</p>
-        <p>This bloom contributes <strong>{bloomScore(selectedBloom.outcomeId, selectedPlot, sprites.familyId, sprites.seed)} harmony</strong> and can be harvested for <strong>{rf(definition.outcomes[selectedBloom.outcomeId - 1].reward)}</strong>.</p>
-        <button type="button" disabled={busy || paused} onClick={() => harvest(selectedPlot, selectedBloom.outcomeId)}>Harvest bloom</button>
+        <p>This bloom contributes <strong>{bloomScore(selectedBloom.outcomeId, selectedPlot, sprites.familyId, sprites.seed)} harmony</strong> and can be harvested for <strong>{displayRf(definition.outcomes[selectedBloom.outcomeId - 1].reward)}</strong>.</p>
+        <button type="button" disabled={busy || paused || syncRequired} onClick={() => harvest(selectedPlot, selectedBloom.outcomeId)}>Harvest bloom</button>
       </div> : menu === "collection" ? <div className="signal-menu">
         <p>Discover all four bloom signals in one runtime session. Discovery remains recorded after harvest; kept blooms stay backed at their fixed simulated RF value with no expiry.</p>
         <div className="signal-collection">{definition.outcomes.map((outcome, index) => {
           const plotIndex = plots.findIndex(plot => plot?.outcomeId === index + 1);
           const discovered = snapshot.plays.some(play => play.outcomeId === index + 1);
-          return <div key={outcome.name} className={discovered ? "signal-discovered" : "signal-undiscovered"}><BloomGlyph outcomeId={index + 1}/><span><strong>{outcome.name}</strong><small>{discovered ? "discovered" : "undiscovered"} · {snapshot.inventory[index].toString()} kept · {rf(outcome.reward)} each</small></span>
-            <button type="button" disabled={busy || paused || snapshot.inventory[index] === 0n} onClick={() => {
+          return <div key={outcome.name} className={discovered ? "signal-discovered" : "signal-undiscovered"}><BloomGlyph outcomeId={index + 1}/><span><strong>{outcome.name}</strong><small>{discovered ? "discovered" : "undiscovered"} · {snapshot.inventory[index].toString()} kept · {displayRf(outcome.reward)} each</small></span>
+            <button type="button" disabled={busy || paused || syncRequired || snapshot.inventory[index] === 0n} onClick={() => {
               if (plotIndex >= 0) harvest(plotIndex, index + 1);
               else void act(() => client.redeem(index + 1, 1n), () => setMessage(`${outcome.name} harvested.`));
             }}>Harvest one</button></div>;
         })}</div>
       </div> : menu === "activity" ? <div className="signal-menu signal-activity">
         <p>Each acquired Signal Seed records 1 RF of repeat activity. Harvesting reopens a scarce plot, so the same Friend can keep growing without erasing prior spend.</p>
-        <div className="signal-activity-total"><small>SIMULATED SESSION SPEND</small><strong>{rf(sessionSpend)}</strong></div>
+        <div className="signal-activity-total"><small>{snapshot.mode === "preview" ? "SIMULATED SESSION SPEND" : "RECORDED RF SPEND"}</small><strong>{displayRf(sessionSpend)}</strong></div>
         <div className="signal-activity-grid">
           <div><small>SEEDS ACQUIRED</small><strong>{acquiredSeeds.toString()}</strong></div>
           <div><small>SIGNALS PLANTED</small><strong>{snapshot.plays.length}</strong></div>
-          <div><small>SG MODEL BURN · 10%</small><strong>{rf(proposedBurn)}</strong></div>
-          <div><small>SG MODEL VAULT · 5%</small><strong>{rf(proposedVault)}</strong></div>
+          <div><small>SG MODEL BURN · 10%</small><strong>{displayRf(proposedBurn)}</strong></div>
+          <div><small>SG MODEL VAULT · 5%</small><strong>{displayRf(proposedVault)}</strong></div>
         </div>
         <div className="signal-session-goals">
           <div><small>SESSION RESONANCE</small><strong>{resonance.name}</strong>
@@ -361,6 +430,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         <p>Reloading the full runtime resets the simulated preview. Reloading only the game frame rebuilds visible plots from the host-owned inventory.</p>
       </div> : null}
       {(error || busy) && <p className={error ? "signal-menu-error" : ""} role={error ? "alert" : "status"}>{error || "Waiting for preview confirmation…"}</p>}
+      {syncRequired && !busy && <button type="button" className="rf-frame-primary" onClick={() => { void refreshVerifiedState(); }}>Refresh verified state</button>}
     </GameMenu>}
   </section>;
 }

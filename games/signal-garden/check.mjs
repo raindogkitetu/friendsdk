@@ -17,9 +17,9 @@ async function run(width) {
         await button.click();
       };
       const buySeed = async () => {
-        await game.getByRole("button", { name: "Buy a seed · 1 RF", exact: true }).click();
+        await game.getByRole("button", { name: "Buy a seed · 1 sim RF", exact: true }).click();
         await game.getByRole("heading", { name: "Signal Seed exchange", exact: true }).waitFor();
-        await game.locator(".rf-frame-menu").getByRole("button", { name: "Buy one Signal Seed · 1 RF", exact: true }).click();
+        await game.locator(".rf-frame-menu").getByRole("button", { name: "Buy one Signal Seed · 1 sim RF", exact: true }).click();
         await confirm();
         await game.getByRole("button", { name: "Choose a plot", exact: true }).waitFor();
       };
@@ -31,6 +31,13 @@ async function run(width) {
       await game.locator("body").evaluate(() => {
         const original = MessagePort.prototype.postMessage;
         MessagePort.prototype.postMessage = function (message, ...args) {
+          if ((window.__signalFailReadCount ?? 0) > 0 && message?.method === "read") {
+            window.__signalFailReadCount--;
+            setTimeout(() => this.dispatchEvent(new MessageEvent("message", {
+              data: { type: "friendsdk:response", id: message.id, error: "Fixture interrupted read" },
+            })), 0);
+            return;
+          }
           if (window.__signalFailNextSettle && message?.method === "settle") {
             window.__signalFailNextSettle = false;
             setTimeout(() => this.dispatchEvent(new MessageEvent("message", {
@@ -40,6 +47,7 @@ async function run(width) {
           }
           return original.call(this, message, ...args);
         };
+        window.__signalFailReadCount = 0;
         window.__signalFailNextSettle = true;
       });
       await game.getByTestId("plot-5").click();
@@ -47,6 +55,10 @@ async function run(width) {
       await game.getByRole("button", { name: "Resume signal", exact: true }).waitFor();
       assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0,
         "A pending signal must not ask for another play confirmation");
+      await game.getByTestId("plot-1").click();
+      assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0,
+        "A known pending signal must not be movable to another plot");
+      assert.match(await game.getByTestId("plot-1").getAttribute("aria-label"), /empty/);
       await game.getByRole("button", { name: "Resume signal", exact: true }).click();
       await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
       const firstBloom = (await game.locator(".signal-reveal h3").textContent())?.trim() ?? "";
@@ -60,6 +72,7 @@ async function run(width) {
       await game.getByRole("heading", { name: "Plot memory", exact: true }).waitFor();
       assert.match(await game.locator(".signal-inspect").textContent(), /harmony/);
       await game.getByRole("button", { name: "Harvest bloom", exact: true }).click();
+      await game.locator("body").evaluate(() => { window.__signalFailReadCount = 1; });
       await confirm();
       await game.getByRole("button", { name: /^Plot 5, empty/ }).waitFor();
       assert.match(await game.getByTestId("plot-5").getAttribute("aria-label"), /empty/);
@@ -74,8 +87,22 @@ async function run(width) {
       assert.equal(await reduced.isChecked(), false);
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
 
+      // A purchase can complete even if the next two state reads fail. The game
+      // must block further economy actions until a verified refresh succeeds,
+      // without buying a second seed.
+      await game.getByRole("button", { name: "Buy a seed · 1 sim RF", exact: true }).click();
+      await game.getByRole("heading", { name: "Signal Seed exchange", exact: true }).waitFor();
+      await game.locator(".rf-frame-menu").getByRole("button", { name: "Buy one Signal Seed · 1 sim RF", exact: true }).click();
+      await page.getByRole("button", { name: "Confirm preview", exact: true }).waitFor();
+      await game.locator("body").evaluate(() => { window.__signalFailReadCount = 2; });
+      await confirm();
+      await game.getByRole("button", { name: "Refresh verified state", exact: true }).waitFor();
+      assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0,
+        "State resync must not trigger another purchase confirmation");
+      await game.getByRole("button", { name: "Refresh verified state", exact: true }).click();
+      await game.getByRole("button", { name: "Choose a plot", exact: true }).waitFor();
+
       // Leave one kept bloom in the captured frame.
-      await buySeed();
       await game.getByTestId("plot-2").click();
       await confirm();
       await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
@@ -92,9 +119,9 @@ async function run(width) {
       await game.getByRole("button", { name: "Guide", exact: true }).click();
       await game.getByRole("button", { name: "View activity receipt", exact: true }).click();
       await game.getByRole("heading", { name: "Token activity receipt", exact: true }).waitFor();
-      assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND3 RF/);
-      assert.match(await game.locator(".signal-activity").textContent(), /SG MODEL BURN · 10%0\.3 RF/);
-      assert.match(await game.locator(".signal-activity").textContent(), /SG MODEL VAULT · 5%0\.15 RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND3 sim RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /SG MODEL BURN · 10%0\.3 sim RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /SG MODEL VAULT · 5%0\.15 sim RF/);
       assert.match(await game.locator(".signal-activity").textContent(), /SESSION RESONANCETUNED/);
       assert.match(await game.locator(".signal-activity").textContent(), /BLOOMS DISCOVERED[1-3]\/4/);
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
@@ -123,7 +150,7 @@ async function run(width) {
       });
       assert.deepEqual(problems, []);
       assert.equal(await game.locator("nav,.rf-game-frame").count(), 0, "Game must not contain app scaffolding");
-      assert.match(await game.locator(".signal-metrics").textContent(), /SEEDS0RF SPENT3/);
+      assert.match(await game.locator(".signal-metrics").textContent(), /SEEDS0SIM RF SPENT3/);
       const spentMetric = game.locator(".signal-metrics>span").filter({ hasText: "RF SPENT" });
       assert.equal(await spentMetric.isVisible(), true,
         "Cumulative RF spend must remain visible in the HUD, including the 360px layout");
