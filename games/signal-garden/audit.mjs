@@ -84,6 +84,8 @@ for (const phrase of [
   "960, 760, 521 and 360",
   "keep the first twelve blooms",
   "test-only synchronization/readiness fixes",
+  "0.35 RF expected gap per Seed",
+  "85% preview return is therefore not a",
 ]) assert(readme.includes(phrase), "README is missing audited statement: " + phrase);
 assert.equal(readme.includes("fifteen `buy → play → settle → redeem`"), false,
   "README must not claim all 15 garden cycles redeem a bloom");
@@ -99,6 +101,9 @@ for (const phrase of [
   'page.keyboard.press("Enter")',
   '.getByRole("button", { name: "Guide", exact: true }).tap()',
   "Every game button must expose an accessible name",
+  "Keyboard focus must remain visibly outlined",
+  "The retry test must fail at least one artwork RPC",
+  "PASS Signal Garden initial load error and Retry recovery.",
   "touch target below 24px",
   "Signal-plot semantics must remain in aria-labels after a bloom is planted",
   "Switching from Guide to activity must reset the menu body to the top",

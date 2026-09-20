@@ -19,6 +19,7 @@ async function run(width, extended = false) {
       }
       assert.match(await game.locator(".signal-metrics").textContent(), /SIM RF20SEEDS0SIM RF SPENT0/,
         "Preview must start at the SDK runtime's 20 sim RF balance with zero spend");
+      const activate = async locator => width === 360 ? locator.tap() : locator.click();
 
       // Prove the documented input modes instead of inferring them from native
       // buttons. Desktop activates Guide from keyboard focus; phone uses a real
@@ -26,14 +27,16 @@ async function run(width, extended = false) {
       if (width === 960) {
         const guide = game.getByRole("button", { name: "Guide", exact: true });
         await guide.focus();
+        assert.notEqual(await guide.evaluate(node => getComputedStyle(node).outlineStyle), "none",
+          "Keyboard focus must remain visibly outlined");
         await page.keyboard.press("Enter");
         await game.getByText(/Its on-chain family makes/).waitFor();
         await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
       }
       if (width === 360) {
-        await game.getByRole("button", { name: "Guide", exact: true }).tap();
+        await activate(game.getByRole("button", { name: "Guide", exact: true }));
         await game.getByText(/Its on-chain family makes/).waitFor();
-        await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).tap();
+        await activate(game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }));
       }
 
       if (extended) {
@@ -57,9 +60,9 @@ async function run(width, extended = false) {
         await button.click();
       };
       const buySeed = async () => {
-        await game.getByRole("button", { name: "Buy a seed · 1 sim RF", exact: true }).click();
+        await activate(game.getByRole("button", { name: "Buy a seed · 1 sim RF", exact: true }));
         await game.getByRole("heading", { name: "Signal Seed exchange", exact: true }).waitFor();
-        await game.locator(".rf-frame-menu").getByRole("button", { name: "Buy one Signal Seed · 1 sim RF", exact: true }).click();
+        await activate(game.locator(".rf-frame-menu").getByRole("button", { name: "Buy one Signal Seed · 1 sim RF", exact: true }));
         await confirm();
         await game.getByRole("button", { name: "Choose a plot", exact: true }).waitFor();
       };
@@ -150,14 +153,14 @@ async function run(width, extended = false) {
       await game.getByRole("button", { name: "Choose a plot", exact: true }).waitFor();
 
       // Leave one kept bloom in the captured frame.
-      await game.getByTestId("plot-2").click();
+      await activate(game.getByTestId("plot-2"));
       await confirm();
       await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
       await game.getByRole("button", { name: "Keep in garden", exact: true }).click();
 
       // A third settled signal reaches the first non-financial resonance tier.
       await buySeed();
-      await game.getByTestId("plot-3").click();
+      await activate(game.getByTestId("plot-3"));
       await confirm();
       await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
       await game.getByRole("button", { name: "Keep in garden", exact: true }).click();
@@ -403,8 +406,52 @@ async function runChildFrameReloadRecovery() {
   console.log("PASS Signal Garden child-frame reload: kept inventory rebuild and pending-play recovery.");
 }
 
+async function runInitialLoadRetry() {
+  await testGame(gameDirectory, {
+    width: 960,
+    height: 800,
+    check: async ({ page, game }) => {
+      const rpcPattern = "https://rpc.mainnet.chain.robinhood.com/**";
+      let releaseRpc;
+      let intercepted = 0;
+      const gate = new Promise(resolve => { releaseRpc = resolve; });
+      const failArtworkRpc = async route => {
+        if (route.request().method() !== "POST") return route.fallback();
+        intercepted++;
+        const request = route.request().postDataJSON();
+        await gate;
+        const fail = entry => ({
+          jsonrpc: "2.0",
+          id: entry.id,
+          error: { code: -32001, message: "Signal Garden retry fixture RPC unavailable" },
+        });
+        const response = Array.isArray(request) ? request.map(fail) : fail(request);
+        return route.fulfill({ json: response, headers: { "access-control-allow-origin": "*" } });
+      };
+      await page.route(rpcPattern, failArtworkRpc);
+      const iframe = page.locator("iframe");
+      await iframe.evaluate(node => new Promise(resolve => {
+        node.addEventListener("load", () => resolve(true), { once: true });
+        node.src = node.src;
+      }));
+      await game.getByText("Waiting for your Friend…", { exact: true }).waitFor();
+      releaseRpc();
+      const retry = game.getByRole("button", { name: "Retry", exact: true });
+      await retry.waitFor();
+      assert(intercepted > 0, "The retry test must fail at least one artwork RPC");
+      await page.unroute(rpcPattern, failArtworkRpc);
+      await retry.click();
+      await game.getByText("Waiting for your Friend…", { exact: true }).waitFor({ state: "hidden" });
+      await game.getByRole("button", { name: "Guide", exact: true }).waitFor();
+      assert.match(await game.locator(".signal-metrics").textContent(), /SIM RF20SEEDS0SIM RF SPENT0/);
+    },
+  });
+  console.log("PASS Signal Garden initial load error and Retry recovery.");
+}
+
 await run(960, true);
 await run(760);
 await run(521);
 await run(360);
 await runChildFrameReloadRecovery();
+await runInitialLoadRetry();

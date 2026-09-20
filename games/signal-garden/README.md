@@ -147,10 +147,19 @@ reference and 5 sim-RF rewards reference. Those figures are not added to the 8.5
 sim RF preview harvest expectation; they describe a separate routing reference.
 
 Neither transfer occurs in the preview, and the protocol reward half is not claimed
-to fund the simulated bloom payouts. A live version would need a separately funded
-player-payout reserve, explicit wallet confirmations, and review against the
-then-current protocol mechanics. FriendSDK v0.1.2 does not expose burn/reward-routing
-actions to this preview. No live contract or transaction flow is included.
+to fund the simulated bloom payouts. The **85% preview return is therefore not a
+drop-in production payout table**. Even under the hypothetical assumption that the
+entire current 0.5 RF rewards half of a 1 RF gameplay payment could fund this game's
+player payouts, a 0.85 RF expected payout would still leave a **0.35 RF expected gap
+per Seed**. This submission does not assume that reward half is available to the game.
+
+A live version must either (a) define and pre-fund a separate reserve/subsidy source
+that covers the chosen expected payout and every maximum-prize liability, or
+(b) reprice/reweight the live reward table so liabilities fit the then-current
+protocol allocation. Sales must stop before the reserve cannot fully back the next
+maximum prize. Explicit wallet confirmations and separate production review remain
+required. FriendSDK v0.1.2 does not expose burn/reward-routing actions to this
+preview. No live contract or transaction flow is included.
 
 The design creates three aligned loops:
 
@@ -224,7 +233,8 @@ The focused browser check runs the real sandboxed runtime at 960, 760, 521 and
 the SDK's read-only test fixture. It verifies:
 
 - wallet/Friend-gated runtime startup and canonical artwork;
-- direct keyboard activation at desktop width and real touch activation at phone width;
+- direct keyboard activation with a visible focus ring at desktop width and real
+  touch activation for Guide, Seed purchase and ordinary planting at phone width;
 - seed purchase and confirmation;
 - interrupted settlement recovery without a second seed or play confirmation,
   preserving the originally selected plot and rejecting relocation while pending;
@@ -241,6 +251,7 @@ the SDK's read-only test fixture. It verifies:
   and absence of app scaffolding;
 - accessible plot grouping and signal-plot semantics before and after planting;
 - child-frame reload recovery for kept inventory and an already-paid pending play;
+- initial artwork/RPC load failure, visible Retry state and successful recovery;
 - accessible button names and a labeled Friend image canvas;
 - no browser, sandbox or unexpected signing errors.
 
