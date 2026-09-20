@@ -251,7 +251,7 @@ the SDK's read-only test fixture. It verifies:
   and absence of app scaffolding;
 - accessible plot grouping and signal-plot semantics before and after planting;
 - child-frame reload recovery for kept inventory and an already-paid pending play;
-- initial artwork/RPC load failure, visible Retry state and successful recovery;
+- initial verified-state load failure, visible Retry state and successful recovery;
 - accessible button names and a labeled Friend image canvas;
 - no browser, sandbox or unexpected signing errors.
 

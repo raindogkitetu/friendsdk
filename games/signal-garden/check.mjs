@@ -411,42 +411,40 @@ async function runInitialLoadRetry() {
     width: 960,
     height: 800,
     check: async ({ page, game }) => {
-      const rpcPattern = "https://rpc.mainnet.chain.robinhood.com/**";
-      let releaseRpc;
-      let intercepted = 0;
-      const gate = new Promise(resolve => { releaseRpc = resolve; });
-      const failArtworkRpc = async route => {
-        if (route.request().method() !== "POST") return route.fallback();
-        intercepted++;
-        const request = route.request().postDataJSON();
-        await gate;
-        const fail = entry => ({
-          jsonrpc: "2.0",
-          id: entry.id,
-          error: { code: -32001, message: "Signal Garden retry fixture RPC unavailable" },
-        });
-        const response = Array.isArray(request) ? request.map(fail) : fail(request);
-        return route.fulfill({ json: response, headers: { "access-control-allow-origin": "*" } });
-      };
-      await page.route(rpcPattern, failArtworkRpc);
+      await page.addInitScript(() => {
+        if (window === window.top) return;
+        const original = MessagePort.prototype.postMessage;
+        MessagePort.prototype.postMessage = function (message, ...args) {
+          if (!window.__signalInitialReadFailed && message?.method === "read") {
+            window.__signalInitialReadFailed = true;
+            setTimeout(() => this.dispatchEvent(new MessageEvent("message", {
+              data: {
+                type: "friendsdk:response",
+                id: message.id,
+                error: "Signal Garden retry fixture initial read unavailable",
+              },
+            })), 0);
+            return;
+          }
+          return original.call(this, message, ...args);
+        };
+      });
       const iframe = page.locator("iframe");
       await iframe.evaluate(node => new Promise(resolve => {
         node.addEventListener("load", () => resolve(true), { once: true });
         node.src = node.src;
       }));
-      await game.getByText("Waiting for your Friend…", { exact: true }).waitFor();
-      releaseRpc();
       const retry = game.getByRole("button", { name: "Retry", exact: true });
       await retry.waitFor();
-      assert(intercepted > 0, "The retry test must fail at least one artwork RPC");
-      await page.unroute(rpcPattern, failArtworkRpc);
+      assert.match(await game.locator(".signal-loading").textContent(),
+        /Signal Garden retry fixture initial read unavailable/);
       await retry.click();
-      await game.getByText("Waiting for your Friend…", { exact: true }).waitFor({ state: "hidden" });
+      await game.getByText("Tuning your Friend's signal…", { exact: true }).waitFor({ state: "hidden" });
       await game.getByRole("button", { name: "Guide", exact: true }).waitFor();
       assert.match(await game.locator(".signal-metrics").textContent(), /SIM RF20SEEDS0SIM RF SPENT0/);
     },
   });
-  console.log("PASS Signal Garden initial load error and Retry recovery.");
+  console.log("PASS Signal Garden initial verified-state load error and Retry recovery.");
 }
 
 await run(960, true);
