@@ -67,6 +67,23 @@ jobs:
           test -f games/signal-garden/.friendsdk/signal-garden-960.png
           test -f games/signal-garden/.friendsdk/signal-garden-360.png
           test "$(cat games/signal-garden/.friendsdk/SOURCE_COMMIT.txt)" = "$GITHUB_SHA"
+          cat > /tmp/signal-garden-expected-files.txt <<'EOF'
+          .friendsdk-output.json
+          SOURCE_COMMIT.txt
+          game-layout.css
+          game.css
+          game.html
+          game.js
+          index.html
+          layout.css
+          runtime.css
+          runtime.js
+          signal-garden-360.png
+          signal-garden-960.png
+          EOF
+          find games/signal-garden/.friendsdk -mindepth 1 -maxdepth 1 -type f -printf '%f\n' | sort > /tmp/signal-garden-actual-files.txt
+          diff -u /tmp/signal-garden-expected-files.txt /tmp/signal-garden-actual-files.txt
+          test -z "$(find games/signal-garden/.friendsdk -mindepth 1 -maxdepth 1 ! -type f -print -quit)"
           ! grep -Eq '__friendWalletTest|Fixture interrupted|0x1111111111111111111111111111111111111111' games/signal-garden/.friendsdk/game.js
           ! grep -Eq '__friendWalletTest|Fixture interrupted|0x1111111111111111111111111111111111111111' games/signal-garden/.friendsdk/runtime.js
           grep -q 'rpc.mainnet.chain.robinhood.com' games/signal-garden/.friendsdk/runtime.js

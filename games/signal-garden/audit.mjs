@@ -3,13 +3,14 @@ import { readFile } from "node:fs/promises";
 
 const here = new URL("./", import.meta.url);
 const read = name => readFile(new URL(name, here), "utf8");
-const [index, model, readme, browserCheck, simulation, gameText] = await Promise.all([
+const [index, model, readme, browserCheck, simulation, gameText, deployWorkflow] = await Promise.all([
   read("index.tsx"),
   read("model.ts"),
   read("README.md"),
   read("check.mjs"),
   read("simulate.mjs"),
   read("game.json"),
+  read("../../.github/workflows/deploy-signal-garden.yml"),
 ]);
 const game = JSON.parse(gameText);
 
@@ -109,5 +110,13 @@ const maxReward = game.outcomes.reduce(
   (max, row) => BigInt(row.reward) > max ? BigInt(row.reward) : max, 0n);
 assert.equal(expected, 850_000_000_000_000_000n);
 assert.equal(maxReward, 2_500_000_000_000_000_000n);
+
+for (const phrase of [
+  "/tmp/signal-garden-expected-files.txt",
+  "SOURCE_COMMIT.txt",
+  "signal-garden-360.png",
+  "signal-garden-960.png",
+  "diff -u /tmp/signal-garden-expected-files.txt /tmp/signal-garden-actual-files.txt",
+]) assert(deployWorkflow.includes(phrase), "Deploy allowlist/provenance guard is missing: " + phrase);
 
 console.log("PASS Signal Garden source/docs/browser/ledger consistency audit.");
