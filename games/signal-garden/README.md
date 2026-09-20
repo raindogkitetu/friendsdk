@@ -105,10 +105,12 @@ node games/signal-garden/simulate.mjs
 
 It parses the same `game.json` through FriendSDK and drives the SDK's actual
 `createGamePreview` ledger through fifteen `buy → play → settle → redeem`
-cycles. It checks 10,000 bps, 0.85 RF expected harvest, 2.5 RF maximum harvest,
-the proposed 0.10/0.05 RF model split, the maximum-reward house-bankroll path
-(2.5 sim RF free stake remains), and the minimum-reward player-balance path
-(11 sim RF remains from the 20 sim RF starting balance).
+cycles using the real 12-slot garden order: keep the first twelve blooms, then
+harvest one bloom before each of signals 13–15 to reopen a slot. It checks 10,000
+bps, 0.85 RF expected harvest, 2.5 RF maximum harvest, the proposed 0.10/0.05 RF
+model split, the maximum-reward house-bankroll path (2.5 sim RF free stake remains),
+and the minimum-reward player-balance path (6.2 sim RF remains from the 20 sim RF
+starting balance while twelve 0.4 sim RF blooms remain kept).
 
 ### Harmony scoring
 
