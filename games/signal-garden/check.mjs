@@ -20,6 +20,21 @@ async function run(width, extended = false) {
       assert.match(await game.locator(".signal-metrics").textContent(), /SIM RF20SEEDS0SIM RF SPENT0/,
         "Preview must start at the SDK runtime's 20 sim RF balance with zero spend");
 
+      if (extended) {
+        await game.locator("body").evaluate(() => {
+          const original = crypto.getRandomValues.bind(crypto);
+          const rolls = [1500, 6000, 8500, 9700, 1500, 6000, 8500, 9700,
+            1500, 6000, 8500, 9700, 1500, 6000, 8500];
+          crypto.getRandomValues = array => {
+            if (array instanceof Uint32Array && array.length === 1 && rolls.length) {
+              array[0] = rolls.shift();
+              return array;
+            }
+            return original(array);
+          };
+        });
+      }
+
       const confirm = async () => {
         const button = page.getByRole("button", { name: "Confirm preview", exact: true });
         await button.waitFor();
@@ -204,9 +219,11 @@ async function run(width, extended = false) {
         await game.getByRole("button", { name: "View activity receipt", exact: true }).click();
         assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND15 sim RF/);
         assert.match(await game.locator(".signal-activity").textContent(), /SESSION RESONANCEEVERGREEN/);
+        assert.match(await game.locator(".signal-activity").textContent(), /BLOOMS DISCOVERED4\/4/);
         assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF BURN · 50%7\.5 sim RF/);
         assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF REWARDS · 50%7\.5 sim RF/);
         await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
+        assert.match(await game.getByRole("button", { name: /Collection/, exact: false }).textContent(), /4\/4/);
       }
 
       const problems = await game.locator("body").evaluate(() => {
