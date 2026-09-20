@@ -95,6 +95,14 @@ async function run(width) {
       assert.match(await game.locator(".signal-activity").textContent(), /BLOOMS DISCOVERED[1-3]\/4/);
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
 
+      // Discovery is historical for the session: harvesting the first bloom must
+      // not erase it from the discovered set.
+      await game.getByRole("button", { name: /Collection/, exact: false }).click();
+      const discoveredRow = game.locator(".signal-collection>div").filter({ hasText: firstBloom });
+      await discoveredRow.waitFor();
+      assert.match(await discoveredRow.textContent(), /discovered/);
+      await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
+
       const problems = await game.locator("body").evaluate(() => {
         const body = document.body.getBoundingClientRect(), issues = [];
         for (const selector of [".signal-header", ".signal-grid", ".signal-friend-card", ".signal-dock"]) {
@@ -115,7 +123,7 @@ async function run(width) {
         "Cumulative RF spend must remain visible in the HUD, including the 360px layout");
     },
   });
-  console.log(`PASS Signal Garden full loop at ${width}px: buy, pending recovery, reveal, keep, inspect, harvest, activity receipt, settings and bounds.`);
+  console.log(`PASS Signal Garden full loop at ${width}px: buy, pending recovery, reveal, keep, inspect, harvest, activity receipt, discovery, resonance, settings and bounds.`);
 }
 
 await run(960);
