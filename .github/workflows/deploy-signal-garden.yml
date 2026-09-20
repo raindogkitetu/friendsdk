@@ -40,6 +40,15 @@ jobs:
       - run: node games/signal-garden/simulate.mjs
       - run: npx playwright install --with-deps chromium
       - run: node games/signal-garden/check.mjs
+
+      - name: Upload audited screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: signal-garden-audit
+          path: games/signal-garden/media/signal-garden-*.png
+          if-no-files-found: error
+          retention-days: 7
+
       - run: node scripts/dev-game.mjs build games/signal-garden
 
       - name: Copy tested artifacts and provenance into preview
