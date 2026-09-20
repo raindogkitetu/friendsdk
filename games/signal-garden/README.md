@@ -121,8 +121,9 @@ The score rewards garden composition without making an undisclosed financial cla
 
 ## Proposed production economy
 
-The preview's 85% expected harvest leaves 0.15 RF per simulated 1 RF seed purchase.
-A reviewed live version would route that purchase amount transparently:
+The preview's expected-value gap is 0.15 RF per simulated 1 RF seed purchase.
+The Signal Garden model assigns that fixed 0.15 RF purchase share transparently,
+while actual bloom payouts remain variable and require separate maximum-prize backing:
 
 - **0.10 RF (10%) burned** per seed purchase.
 - **0.05 RF (5%) sent to a seasonal vault** funding community garden goals and
