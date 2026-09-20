@@ -21,12 +21,21 @@ in the HUD and action controls, and cumulative simulated RF spend stays visible
 even on the 360 px layout, while the activity receipt shows the
 corresponding current-protocol reference without claiming that a live burn or reward routing occurred.
 
-| For every 10 simulated Signal Seed purchases | Amount |
+For every 10 simulated Signal Seed purchases:
+
+| Preview gameplay metric | Amount |
 | --- | ---: |
 | Gross simulated RF activity | 10 sim RF |
-| Expected harvest value | 8.5 sim RF |
-| Current protocol-reference burn | 5 sim RF equivalent |
-| Current protocol-reference rewards | 5 sim RF equivalent |
+| Expected simulated bloom harvest | 8.5 sim RF |
+
+| Separate current-protocol routing reference for the same gross activity | Amount |
+| --- | ---: |
+| Burn reference | 5 sim-RF equivalent |
+| Rewards reference | 5 sim-RF equivalent |
+
+**Do not add the 8.5 and 5/5 figures together.** The 8.5 sim RF is the preview
+player-payout expectation; the 5/5 figures are a separate illustration of the
+current Rare Friends gameplay-payment routing rule. No live transfer occurs.
 
 Harvesting does not reduce the gross-spend counter. It reopens scarce garden space,
 so repeat play increases visible RF activity while every reward remains fixed and
@@ -108,7 +117,7 @@ It parses the same `game.json` through FriendSDK and drives the SDK's actual
 `createGamePreview` ledger through fifteen `buy → play → settle → redeem`
 cycles using the real 12-slot garden order: keep the first twelve blooms, then
 harvest one bloom before each of signals 13–15 to reopen a slot. It checks 10,000
-bps, 0.85 RF expected harvest, 2.5 RF maximum harvest, the 50/50 protocol-reference
+bps, 0.85 sim RF expected harvest, 2.5 sim RF maximum harvest, the 50/50 protocol-reference
 split, the maximum-reward house-bankroll path (2.5 sim RF free stake remains),
 and the minimum-reward player-balance path (6.2 sim RF remains from the 20 sim RF
 starting balance while twelve 0.4 sim RF blooms remain kept).
@@ -133,8 +142,9 @@ of a Rare Friends gameplay payment.
 Rare Friends' current [$RAREFRIENDS documentation](https://rarefriends.com/docs/rarefriends)
 describes general gameplay payments as **50% burn / 50% rewards**. Signal Garden
 therefore shows a separate protocol-reference counter alongside gross simulated
-spend. For example, 10 sim RF of gross preview activity displays a 5 RF burn
-equivalent and 5 RF rewards equivalent.
+spend. For example, 10 sim RF of gross preview activity displays a 5 sim-RF burn
+reference and 5 sim-RF rewards reference. Those figures are not added to the 8.5
+sim RF preview harvest expectation; they describe a separate routing reference.
 
 Neither transfer occurs in the preview, and the protocol reward half is not claimed
 to fund the simulated bloom payouts. A live version would need a separately funded
