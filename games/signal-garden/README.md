@@ -190,7 +190,8 @@ the SDK's read-only test fixture. It verifies:
 
 - wallet/Friend-gated runtime startup and canonical artwork;
 - seed purchase and confirmation;
-- interrupted settlement recovery without a second seed or play confirmation;
+- interrupted settlement recovery without a second seed or play confirmation,
+  preserving the originally selected plot within the active frame session;
 - reveal, keep, plot inspection and harvest;
 - token-activity receipt, always-visible mobile RF spend, session resonance,
   bloom discovery, guide and reduced-motion controls;
@@ -204,7 +205,9 @@ development and static builds require a real eligible wallet.
 
 - The economy and the proposed burn/vault split are simulated.
 - Garden placement is session-local because FriendSDK v0.1.2 has no persistence API.
-  If only the sandbox frame reloads, visible plots are rebuilt from host inventory;
+  Interrupted settlement preserves the selected plot while the frame stays mounted.
+  If the sandbox frame itself reloads, a recovered pending signal must be assigned
+  to an empty plot again, and visible kept blooms are rebuilt from host inventory;
   exact prior plot positions are not retained.
 - A full runtime reload resets simulated balances and inventory.
 - Trading, swaps, creator fees, additional-currency actions, wearables and live

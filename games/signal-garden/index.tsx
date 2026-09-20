@@ -105,6 +105,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   const [plots, setPlots] = useState<(GardenBloom | null)[]>(() => Array.from({ length: PLOT_COUNT }, () => null));
   const [menu, setMenu] = useState<Menu>(null);
   const [selectedPlot, setSelectedPlot] = useState<number | null>(null);
+  const [pendingPlot, setPendingPlot] = useState<number | null>(null);
   const [result, setResult] = useState<GamePlay | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -117,7 +118,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   useEffect(() => {
     const version = ++epoch.current;
     locked.current = false;
-    setSnapshot(null); setSprites(null); setMenu(null); setSelectedPlot(null); setResult(null);
+    setSnapshot(null); setSprites(null); setMenu(null); setSelectedPlot(null); setPendingPlot(null); setResult(null);
     setBusy(false); setError(""); setMessage("");
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const updatePreference = () => setReducedMotion(preference.matches);
@@ -186,20 +187,24 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     setMessage("One simulated Signal Seed is ready. Choose an empty plot.");
     setMenu(null);
   });
-  const plant = (plotIndex: number) => void act(async () => {
-    const play = pending ?? (await client.play(1n))[0];
-    return client.settle(play.id);
-  }, settled => {
-    if (settled.outcomeId === null) {
-      setMessage("The signal is pending. Resume it without spending another seed.");
-      setMenu(null);
-      return;
-    }
-    setPlots(current => current.map((plot, index) => index === plotIndex ? {
-      outcomeId: settled.outcomeId!, playId: settled.id.toString(),
-    } : plot));
-    setSelectedPlot(plotIndex); setResult(settled); setMenu("reveal");
-  });
+  const plant = (plotIndex: number) => {
+    setPendingPlot(plotIndex);
+    void act(async () => {
+      const play = pending ?? (await client.play(1n))[0];
+      return client.settle(play.id);
+    }, settled => {
+      if (settled.outcomeId === null) {
+        setMessage("The signal is pending. Resume it without spending another seed.");
+        setMenu(null);
+        return;
+      }
+      setPlots(current => current.map((plot, index) => index === plotIndex ? {
+        outcomeId: settled.outcomeId!, playId: settled.id.toString(),
+      } : plot));
+      setPendingPlot(null);
+      setSelectedPlot(plotIndex); setResult(settled); setMenu("reveal");
+    });
+  };
   const harvest = (plotIndex: number, outcomeId: number) => void act(
     () => client.redeem(outcomeId, 1n),
     () => {
@@ -218,7 +223,8 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   };
   const firstEmpty = plots.findIndex(plot => !plot);
   const status = error || message || (busy ? "Waiting for preview confirmation…" :
-    pending ? "A signal is pending. Resume it—no second seed is spent." :
+    pending && pendingPlot !== null ? `Signal pending for plot ${pendingPlot + 1}. Resume it—no second seed is spent.` :
+    pending ? "A signal is pending. Choose an empty plot to resume it—no second seed is spent." :
     snapshot.consumables > 0n ? "Seed ready. Choose an empty plot." : "Buy a seed, then choose where it grows.");
   const menuTitle = menu === "shop" ? "Signal Seed exchange" : menu === "collection" ? "Bloom collection" :
     menu === "activity" ? "Token activity receipt" : menu === "rules" ? "How the garden works" : menu === "settings" ? "Garden settings" :
@@ -271,8 +277,11 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
       <button type="button" onClick={() => navigate("collection")}><span>Collection</span><strong>{discoveredBloomCount}/4</strong></button>
       <div className="signal-action">
         <button type="button" className="signal-primary" disabled={busy || paused || firstEmpty < 0}
-          onClick={() => pending ? plant(firstEmpty) : snapshot.consumables > 0n ? setMessage("Choose any empty plot around your Friend.") : navigate("shop")}>
-          {pending ? "Resume signal" : snapshot.consumables > 0n ? "Choose a plot" : "Buy a seed · 1 RF"}
+          onClick={() => pending && pendingPlot !== null ? plant(pendingPlot) :
+            pending ? setMessage("Choose an empty plot to place the pending signal.") :
+            snapshot.consumables > 0n ? setMessage("Choose any empty plot around your Friend.") : navigate("shop")}>
+          {pending && pendingPlot !== null ? "Resume signal" : pending ? "Choose resume plot" :
+            snapshot.consumables > 0n ? "Choose a plot" : "Buy a seed · 1 RF"}
         </button>
         <p className={error ? "signal-error" : ""} role={error ? "alert" : "status"} aria-live="polite">{status}</p>
       </div>

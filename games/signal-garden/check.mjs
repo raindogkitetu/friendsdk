@@ -42,7 +42,7 @@ async function run(width) {
         };
         window.__signalFailNextSettle = true;
       });
-      await game.getByTestId("plot-1").click();
+      await game.getByTestId("plot-5").click();
       await confirm();
       await game.getByRole("button", { name: "Resume signal", exact: true }).waitFor();
       assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0,
@@ -52,13 +52,17 @@ async function run(width) {
       const firstBloom = (await game.locator(".signal-reveal h3").textContent())?.trim() ?? "";
       assert(bloomNames.has(firstBloom), `Unknown bloom: ${firstBloom}`);
       await game.getByRole("button", { name: "Keep in garden", exact: true }).click();
-      await game.getByTestId("plot-1").click();
+      assert.match(await game.getByTestId("plot-5").getAttribute("aria-label"), /inspect/,
+        "Resumed signal must settle into the originally selected plot");
+      assert.match(await game.getByTestId("plot-1").getAttribute("aria-label"), /empty/,
+        "Resume must not fall back to the first empty plot");
+      await game.getByTestId("plot-5").click();
       await game.getByRole("heading", { name: "Plot memory", exact: true }).waitFor();
       assert.match(await game.locator(".signal-inspect").textContent(), /harmony/);
       await game.getByRole("button", { name: "Harvest bloom", exact: true }).click();
       await confirm();
-      await game.getByRole("button", { name: /^Plot 1, empty/ }).waitFor();
-      assert.match(await game.getByTestId("plot-1").getAttribute("aria-label"), /empty/);
+      await game.getByRole("button", { name: /^Plot 5, empty/ }).waitFor();
+      assert.match(await game.getByTestId("plot-5").getAttribute("aria-label"), /empty/);
 
       await game.getByRole("button", { name: "Guide", exact: true }).click();
       await game.getByText(/Its on-chain family makes/).waitFor();
