@@ -25,3 +25,4 @@ jobs:
       - run: npm run check:games
       - run: npx playwright install --with-deps chromium
       - run: npm run check:browser
+      - run: node games/signal-garden/check.mjs

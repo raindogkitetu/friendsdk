@@ -57,6 +57,11 @@ The in-game **Token activity receipt** keeps a running session total of acquired
 seeds, signals planted and simulated RF spent. It also calculates the matching
 10% burn and 5% season-vault proposal without presenting either as a live transfer.
 
+Two non-financial session goals make repeat planting useful without changing RF odds:
+**Bloom discovery** remembers which of the four signals have appeared even after
+harvest, and **Resonance** advances at 3, 6, 12 and 24 settled signals. Both reset
+with the runtime session and never increase rewards.
+
 Mouse, touch and keyboard navigation are supported. All interactive plots and
 controls are native buttons with accessible names. Settings include a reduced-motion
 mode; the game is silent by design.
@@ -114,10 +119,21 @@ version would route that amount transparently:
   fully covered season rewards.
 - **0.85 RF expected harvest liability**, with each possible reward fully reserved.
 
-This split is a labeled model, not a live burn or promise. FriendSDK v0.1.2 does
-not expose a burn or season-vault action. Any production version needs a separately
-reviewed contract, funded reserves, explicit wallet confirmations and auditable
-season rules. No live contract or transaction flow is included in this submission.
+This split is a labeled **Signal Garden prototype model**, not a live burn, a
+promise, or a description of current Rare Friends protocol routing. FriendSDK
+v0.1.2 does not expose a burn or season-vault action.
+
+### Current protocol alignment
+
+Rare Friends' current token documentation describes general gameplay payments as
+**50% burn / 50% rewards**:
+https://rarefriends.com/docs/rarefriends
+
+Signal Garden's 85% harvest / 10% burn / 5% seasonal-vault model is therefore not
+presented as a drop-in production payment route. A live version must be redesigned
+and reviewed against the then-current protocol rules; that may require changing
+the seed price, reward table, reserve funding or routing before any on-chain launch.
+No live contract or transaction flow is included in this submission.
 
 The model creates three aligned loops:
 
@@ -176,7 +192,8 @@ the SDK's read-only test fixture. It verifies:
 - seed purchase and confirmation;
 - interrupted settlement recovery without a second seed or play confirmation;
 - reveal, keep, plot inspection and harvest;
-- token-activity receipt, guide and reduced-motion controls;
+- token-activity receipt, always-visible mobile RF spend, session resonance,
+  bloom discovery, guide and reduced-motion controls;
 - desktop/mobile container bounds and absence of app scaffolding;
 - no browser, sandbox or unexpected signing errors.
 

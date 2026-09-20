@@ -168,6 +168,13 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   const sessionSpend = acquiredSeeds * definition.price;
   const proposedBurn = sessionSpend / 10n;
   const proposedVault = sessionSpend / 20n;
+  const settledSignals = snapshot.plays.filter(play => play.outcomeId !== null).length;
+  const discoveredBloomCount = new Set(snapshot.plays.flatMap(play => play.outcomeId ? [play.outcomeId] : [])).size;
+  const resonance = settledSignals >= 24 ? { name: "INFINITE", next: null } :
+    settledSignals >= 12 ? { name: "HARMONIC", next: 24 } :
+    settledSignals >= 6 ? { name: "RADIANT", next: 12 } :
+    settledSignals >= 3 ? { name: "TUNED", next: 6 } : { name: "AWAKENING", next: 3 };
+  const signalsToNext = resonance.next === null ? 0 : resonance.next - settledSignals;
   const selectedBloom = selectedPlot === null ? null : plots[selectedPlot];
   const revealedOutcome = result?.outcomeId ? definition.outcomes[result.outcomeId - 1] : null;
 
@@ -254,11 +261,14 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         <FriendPortrait sprites={sprites} reducedMotion={reducedMotion} bloomCount={totalBlooms}/>
         <div className="signal-identity"><strong>Friend #{friendId.toString()}</strong><small>affinity · {affinity.name}</small></div>
       </div>
-      <div className="signal-score-card"><small>HARMONY</small><strong>{score}</strong><p>{totalBlooms}/12 blooms · {emptyCount ? `${emptyCount} open` : "complete"}</p></div>
+      <div className="signal-score-card"><small>HARMONY</small><strong>{score}</strong><p>{totalBlooms}/12 blooms · {emptyCount ? `${emptyCount} open` : "complete"}</p>
+        <div className="signal-resonance"><small>RESONANCE</small><strong>{resonance.name}</strong>
+          <em>{resonance.next === null ? "peak session tier" : `${signalsToNext} signal${signalsToNext === 1 ? "" : "s"} to next`}</em></div>
+      </div>
     </main>
 
     <footer className="signal-dock">
-      <button type="button" onClick={() => navigate("collection")}><span>Collection</span><strong>{totalBlooms}</strong></button>
+      <button type="button" onClick={() => navigate("collection")}><span>Collection</span><strong>{discoveredBloomCount}/4</strong></button>
       <div className="signal-action">
         <button type="button" className="signal-primary" disabled={busy || paused || firstEmpty < 0}
           onClick={() => pending ? plant(firstEmpty) : snapshot.consumables > 0n ? setMessage("Choose any empty plot around your Friend.") : navigate("shop")}>
@@ -282,7 +292,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         <button type="button" className="rf-frame-primary" disabled={!canBuy || busy || paused} onClick={buySeed}>Buy one Signal Seed · {rf(definition.price)}</button>
         {!canBuy && <p>{emptyCount === 0 ? "Harvest a bloom to open a plot first." : snapshot.rfBalance < definition.price ?
           "Not enough simulated RF." : "New seeds are paused until the reward reserve has room."}</p>}
-        <small>Every seed reserves {rf(maxPrize)}. Expected harvest value is 0.85 RF; the proposed live version routes the 0.15 RF gap to a 10% burn and 5% seasonal vault.</small>
+        <small>Every seed reserves {rf(maxPrize)}. Expected harvest value is 0.85 RF. The 10% burn + 5% seasonal-vault split is a Signal Garden prototype model, not a claim about current Rare Friends protocol routing.</small>
       </div> : menu === "reveal" && result?.outcomeId && revealedOutcome && selectedPlot !== null ? <div className="signal-reveal">
         <div className="signal-reveal-art"><BloomGlyph outcomeId={result.outcomeId} large/><span className="signal-rays" aria-hidden="true"/></div>
         <small>PLOT {selectedPlot + 1} · {revealedOutcome.chanceBps / 100}% SIGNAL</small>
@@ -299,10 +309,11 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         <p>This bloom contributes <strong>{bloomScore(selectedBloom.outcomeId, selectedPlot, sprites.familyId, sprites.seed)} harmony</strong> and can be harvested for <strong>{rf(definition.outcomes[selectedBloom.outcomeId - 1].reward)}</strong>.</p>
         <button type="button" disabled={busy || paused} onClick={() => harvest(selectedPlot, selectedBloom.outcomeId)}>Harvest bloom</button>
       </div> : menu === "collection" ? <div className="signal-menu">
-        <p>Kept blooms remain backed at their fixed simulated RF value with no expiry during this session.</p>
+        <p>Discover all four bloom signals in one runtime session. Discovery remains recorded after harvest; kept blooms stay backed at their fixed simulated RF value with no expiry.</p>
         <div className="signal-collection">{definition.outcomes.map((outcome, index) => {
           const plotIndex = plots.findIndex(plot => plot?.outcomeId === index + 1);
-          return <div key={outcome.name}><BloomGlyph outcomeId={index + 1}/><span><strong>{outcome.name}</strong><small>{snapshot.inventory[index].toString()} kept · {rf(outcome.reward)} each</small></span>
+          const discovered = snapshot.plays.some(play => play.outcomeId === index + 1);
+          return <div key={outcome.name} className={discovered ? "signal-discovered" : "signal-undiscovered"}><BloomGlyph outcomeId={index + 1}/><span><strong>{outcome.name}</strong><small>{discovered ? "discovered" : "undiscovered"} · {snapshot.inventory[index].toString()} kept · {rf(outcome.reward)} each</small></span>
             <button type="button" disabled={busy || paused || snapshot.inventory[index] === 0n} onClick={() => {
               if (plotIndex >= 0) harvest(plotIndex, index + 1);
               else void act(() => client.redeem(index + 1, 1n), () => setMessage(`${outcome.name} harvested.`));
@@ -317,11 +328,18 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
           <div><small>PROPOSED BURN · 10%</small><strong>{rf(proposedBurn)}</strong></div>
           <div><small>SEASON VAULT · 5%</small><strong>{rf(proposedVault)}</strong></div>
         </div>
-        <p className="signal-activity-note"><strong>Model only.</strong> The preview spends no live RF and performs no burn or vault transfer. A reviewed production contract would reserve every reward and execute the published split with explicit wallet confirmations.</p>
+        <div className="signal-session-goals">
+          <div><small>SESSION RESONANCE</small><strong>{resonance.name}</strong>
+            <span>{resonance.next === null ? "Peak session tier reached." : `${signalsToNext} more settled signal${signalsToNext === 1 ? "" : "s"} to the next tier.`}</span></div>
+          <div><small>BLOOMS DISCOVERED</small><strong>{discoveredBloomCount}/4</strong>
+            <span>Discovery survives harvest for this runtime session.</span></div>
+        </div>
+        <p className="signal-activity-note"><strong>Model only.</strong> The preview spends no live RF and performs no burn or vault transfer. The 10% burn + 5% vault split is this entry's prototype model, not current Rare Friends protocol routing. Any live version must be reworked and reviewed against the then-current protocol rules, with every reward fully funded and explicit wallet confirmations.</p>
       </div> : menu === "rules" ? <div className="signal-menu signal-rules">
         <p><strong>1.</strong> Buy a 1 RF Signal Seed. <strong>2.</strong> Choose an empty plot. <strong>3.</strong> Keep the revealed bloom for harmony, or harvest its fixed RF value.</p>
         <p>Your verified <strong>{sprites.familyName} Friend #{friendId.toString()}</strong> is the heart of this garden. Its on-chain family makes <strong>{affinity.name}</strong> its affinity; its seed marks three glowing signal plots. Affinity blooms and signal plots add non-financial harmony bonuses. They never change the published RF odds.</p>
-        <p>A full garden has twelve blooms. Harvesting opens a plot so the loop can continue. The garden layout is session-local; the SDK ledger retains kept items during the runtime session.</p>
+        <p>A full garden has twelve blooms. Harvesting opens a plot so the loop can continue. Bloom discovery remains recorded after harvest, and session resonance advances at 3, 6, 12 and 24 settled signals. These goals are non-financial and never change odds or rewards.</p>
+        <p>The garden layout, discovery and resonance are session-local; a full runtime reload resets them. The SDK ledger retains kept items only during the runtime session.</p>
         <p><strong>Everything is simulated.</strong> No RF, signature or transaction is used in this preview. A production version would require a reviewed contract and explicit wallet confirmations.</p>
         <button type="button" onClick={() => navigate("activity")}>View activity receipt</button>
       </div> : menu === "settings" ? <div className="signal-menu">

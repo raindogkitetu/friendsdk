@@ -38,6 +38,8 @@ jobs:
       - run: npm run build
       - run: npx friendsdk check games/signal-garden
       - run: node games/signal-garden/simulate.mjs
+      - run: npx playwright install --with-deps chromium
+      - run: node games/signal-garden/check.mjs
       - run: node scripts/dev-game.mjs build games/signal-garden
 
       - name: Verify static preview

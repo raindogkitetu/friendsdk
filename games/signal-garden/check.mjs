@@ -77,13 +77,22 @@ async function run(width) {
       await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
       await game.getByRole("button", { name: "Keep in garden", exact: true }).click();
 
+      // A third settled signal reaches the first non-financial resonance tier.
+      await buySeed();
+      await game.getByTestId("plot-3").click();
+      await confirm();
+      await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
+      await game.getByRole("button", { name: "Keep in garden", exact: true }).click();
+
       // The receipt keeps gross RF activity visible even after a prior bloom was harvested.
       await game.getByRole("button", { name: "Guide", exact: true }).click();
       await game.getByRole("button", { name: "View activity receipt", exact: true }).click();
       await game.getByRole("heading", { name: "Token activity receipt", exact: true }).waitFor();
-      assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND2 RF/);
-      assert.match(await game.locator(".signal-activity").textContent(), /PROPOSED BURN · 10%0\.2 RF/);
-      assert.match(await game.locator(".signal-activity").textContent(), /SEASON VAULT · 5%0\.1 RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND3 RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /PROPOSED BURN · 10%0\.3 RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /SEASON VAULT · 5%0\.15 RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /SESSION RESONANCETUNED/);
+      assert.match(await game.locator(".signal-activity").textContent(), /BLOOMS DISCOVERED[1-3]\/4/);
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
 
       const problems = await game.locator("body").evaluate(() => {
@@ -100,7 +109,7 @@ async function run(width) {
       });
       assert.deepEqual(problems, []);
       assert.equal(await game.locator("nav,.rf-game-frame").count(), 0, "Game must not contain app scaffolding");
-      assert.match(await game.locator(".signal-metrics").textContent(), /SEEDS0RF SPENT2/);
+      assert.match(await game.locator(".signal-metrics").textContent(), /SEEDS0RF SPENT3/);
       const spentMetric = game.locator(".signal-metrics>span").filter({ hasText: "RF SPENT" });
       assert.equal(await spentMetric.isVisible(), true,
         "Cumulative RF spend must remain visible in the HUD, including the 360px layout");
