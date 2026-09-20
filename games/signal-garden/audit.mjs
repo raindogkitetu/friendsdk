@@ -134,9 +134,13 @@ assert.equal(maxReward, 2_500_000_000_000_000_000n);
 assert.equal(deployWorkflow.includes("    paths:"), false,
   "Deploy must run on every main push so SOURCE_COMMIT.txt cannot lag main");
 assert.equal(deployWorkflow.includes("cache: npm"), false,
-  "Deploy must not rely on mutable npm caches");
+  "Deploy must not request explicit npm caching");
 assert.equal(checkWorkflow.includes("cache: npm"), false,
-  "SDK CI must not rely on mutable npm caches");
+  "SDK CI must not request explicit npm caching");
+assert(deployWorkflow.includes("package-manager-cache: false"),
+  "Deploy must explicitly disable setup-node automatic package-manager caching");
+assert(checkWorkflow.includes("package-manager-cache: false"),
+  "SDK CI must explicitly disable setup-node automatic package-manager caching");
 for (const phrase of [
   "/tmp/signal-garden-expected-files.txt",
   ".nojekyll",
