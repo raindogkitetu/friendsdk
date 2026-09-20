@@ -145,7 +145,10 @@ async function run(width) {
 
       const problems = await game.locator("body").evaluate(() => {
         const body = document.body.getBoundingClientRect(), issues = [];
-        for (const selector of [".signal-header", ".signal-grid", ".signal-friend-card", ".signal-dock"]) {
+        if (document.documentElement.scrollWidth > innerWidth + 1 || document.documentElement.scrollHeight > innerHeight + 1) {
+          issues.push("Game document overflow");
+        }
+        for (const selector of [".signal-header", ".signal-grid", ".signal-friend-card", ".signal-dock", ".signal-action p"]) {
           const node = document.querySelector(selector);
           if (!node) { issues.push(`Missing ${selector}`); continue; }
           const box = node.getBoundingClientRect();
@@ -153,6 +156,17 @@ async function run(width) {
             issues.push(`Outside viewport: ${selector}`);
           }
         }
+        for (const selector of [".signal-header>button", ".signal-metrics>span"]) {
+          for (const node of document.querySelectorAll(selector)) {
+            if (getComputedStyle(node).display === "none") continue;
+            const box = node.getBoundingClientRect();
+            if (box.left < -1 || box.right > body.right + 1 || box.top < -1 || box.bottom > body.bottom + 1) {
+              issues.push(`Clipped control: ${selector}`);
+            }
+          }
+        }
+        const status = document.querySelector(".signal-action p");
+        if (status && getComputedStyle(status).pointerEvents !== "none") issues.push("Status blocks pointer input");
         return issues;
       });
       assert.deepEqual(problems, []);
@@ -167,4 +181,6 @@ async function run(width) {
 }
 
 await run(960);
+await run(760);
+await run(521);
 await run(360);

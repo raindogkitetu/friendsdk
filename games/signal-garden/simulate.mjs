@@ -9,8 +9,9 @@ const weighted = definition.outcomes.reduce((sum, outcome) =>
 const expected = weighted / 10_000n;
 const burn = price / 10n;
 const seasonVault = price / 20n;
-const maxPrize = definition.outcomes.reduce(
-  (max, outcome) => BigInt(outcome.reward) > max ? BigInt(outcome.reward) : max, 0n);
+const rewards = definition.outcomes.map(outcome => BigInt(outcome.reward));
+const maxPrize = rewards.reduce((max, reward) => reward > max ? reward : max, 0n);
+const minPrize = rewards.reduce((min, reward) => reward < min ? reward : min, rewards[0]);
 const previewStake = maxPrize * 10n;
 const previewBalance = 20n * BASE;
 
@@ -40,13 +41,26 @@ for (let signal = 1; signal <= 15; signal++) {
 }
 assert.equal(freeStake, 2_500_000_000_000_000_000n);
 
+// Worst-case player-balance proof: the smallest 0.4 RF bloom loses 0.6 RF
+// net per buy+harvest cycle. Fifteen such cycles still leave 11 RF, so the
+// player-side preview balance cannot block the 15-signal tier either.
+let lowRewardBalance = previewBalance;
+for (let signal = 1; signal <= 15; signal++) {
+  assert(lowRewardBalance >= price, `Player balance cannot buy low-reward seed ${signal}`);
+  lowRewardBalance -= price;
+  lowRewardBalance += minPrize;
+}
+assert.equal(lowRewardBalance, 11n * BASE);
+
 console.log(JSON.stringify({
   seedPriceRF: Number(price) / Number(BASE),
   expectedHarvestRF: Number(expected) / Number(BASE),
   expectedReturn: `${Number(expected * 10_000n / price) / 100}%`,
+  minimumHarvestRF: Number(minPrize) / Number(BASE),
   maximumHarvestRF: Number(maxPrize) / Number(BASE),
   previewPrizeStakeRF: Number(previewStake) / Number(BASE),
   worstCaseFreeStakeAfter15RF: Number(freeStake) / Number(BASE),
+  lowRewardPlayerBalanceAfter15RF: Number(lowRewardBalance) / Number(BASE),
   guaranteedPeakResonanceSignals: 15,
   proposedBurnRF: Number(burn) / Number(BASE),
   proposedSeasonVaultRF: Number(seasonVault) / Number(BASE),

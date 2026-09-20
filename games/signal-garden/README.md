@@ -106,7 +106,9 @@ It checks that weights total 10,000 bps, expected harvest is exactly 0.85 RF,
 maximum harvest is 2.5 RF, the 0.15 RF gap exactly matches the proposed 0.10 RF
 burn plus 0.05 RF season vault, and the SDK preview's 25 RF starting prize stake
 can fund the 15-signal peak Resonance tier even if every result is the maximum
-2.5 RF reward and each bloom is immediately harvested to reopen space.
+2.5 RF reward and each bloom is immediately harvested to reopen space. A second
+worst-case path verifies that fifteen minimum 0.4 RF harvests still leave the
+player with 11 sim RF from the 20 sim RF starting balance.
 
 ### Harmony scoring
 
@@ -197,7 +199,8 @@ node games/signal-garden/simulate.mjs
 node games/signal-garden/check.mjs
 ```
 
-The focused browser check runs the real sandboxed runtime at 960 px and 360 px with
+The focused browser check runs the real sandboxed runtime at 960, 760, 521 and
+360 px with
 the SDK's read-only test fixture. It verifies:
 
 - wallet/Friend-gated runtime startup and canonical artwork;
@@ -209,8 +212,8 @@ the SDK's read-only test fixture. It verifies:
 - reveal, keep, plot inspection and harvest;
 - token-activity receipt, always-visible mobile RF spend, session resonance,
   bloom discovery, guide and reduced-motion controls;
-- visible phone-width action errors, double-click locking, desktop/mobile container
-  bounds and absence of app scaffolding;
+- visible phone-width action errors, non-blocking status overlays, double-click
+  locking, responsive-breakpoint/container bounds and absence of app scaffolding;
 - no browser, sandbox or unexpected signing errors.
 
 Mock identity and RPC responses exist only inside the automated test harness. Normal
