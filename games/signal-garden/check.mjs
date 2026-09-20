@@ -5,7 +5,7 @@ import { testGame } from "@rarefriends/friendsdk/testing";
 const gameDirectory = resolve("games/signal-garden");
 const bloomNames = new Set(["Dewbud", "Sunpetal", "Prismvine", "Starbloom"]);
 
-async function run(width) {
+async function run(width, extended = false) {
   await testGame(gameDirectory, {
     width,
     height: 800,
@@ -143,6 +143,49 @@ async function run(width) {
       assert.match(await discoveredRow.textContent(), /discovered/);
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
 
+      if (extended) {
+        const plantOne = async () => {
+          await buySeed();
+          const empty = game.locator(".signal-plot.signal-empty").first();
+          await empty.click();
+          await confirm();
+          await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
+          await game.getByRole("button", { name: "Keep in garden", exact: true }).click();
+        };
+        const harvestFirst = async () => {
+          await game.locator(".signal-plot.signal-filled").first().click();
+          await game.getByRole("heading", { name: "Plot memory", exact: true }).waitFor();
+          await game.getByRole("button", { name: "Harvest bloom", exact: true }).click();
+          await confirm();
+        };
+
+        // We have three settled signals and two kept blooms at this point. Fill
+        // the remaining ten plots: 13 settled signals, 12 kept blooms, full board.
+        for (let index = 0; index < 10; index++) await plantOne();
+        assert.equal(await game.locator(".signal-plot.signal-empty").count(), 0);
+        assert.match(await game.locator(".signal-score-card").textContent(), /12\/12 blooms · complete/);
+        assert.match(await game.locator(".signal-resonance").textContent(), /HARMONIC/);
+        const fullAction = game.locator(".signal-primary");
+        assert.equal(await fullAction.isDisabled(), true, "A full garden must block another seed purchase");
+
+        // Reopen one slot, grow signal 14, reopen again, then grow signal 15.
+        // This proves the advertised repeat loop and peak Resonance in the real UI.
+        await harvestFirst();
+        await game.locator(".signal-plot.signal-empty").first().waitFor();
+        assert.equal(await game.getByRole("button", { name: "Buy a seed · 1 sim RF", exact: true }).isEnabled(), true);
+        await plantOne();
+        await harvestFirst();
+        await plantOne();
+
+        assert.equal(await game.locator(".signal-plot.signal-empty").count(), 0);
+        assert.match(await game.locator(".signal-resonance").textContent(), /EVERGREEN/);
+        await game.getByRole("button", { name: "Guide", exact: true }).click();
+        await game.getByRole("button", { name: "View activity receipt", exact: true }).click();
+        assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND15 sim RF/);
+        assert.match(await game.locator(".signal-activity").textContent(), /SESSION RESONANCEEVERGREEN/);
+        await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
+      }
+
       const problems = await game.locator("body").evaluate(() => {
         const body = document.body.getBoundingClientRect(), issues = [];
         if (document.documentElement.scrollWidth > innerWidth + 1 || document.documentElement.scrollHeight > innerHeight + 1) {
@@ -177,10 +220,10 @@ async function run(width) {
         "Cumulative RF spend must remain visible in the HUD, including the 360px layout");
     },
   });
-  console.log(`PASS Signal Garden full loop at ${width}px: buy, pending recovery, reveal, keep, inspect, harvest, activity receipt, discovery, resonance, settings and bounds.`);
+  console.log(`PASS Signal Garden at ${width}px: recovery, resync, responsive UI${extended ? ", full 15-signal repeat loop" : ""}.`);
 }
 
-await run(960);
+await run(960, true);
 await run(760);
 await run(521);
 await run(360);
