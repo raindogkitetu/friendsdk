@@ -140,6 +140,11 @@ async function run(width, extended = false) {
       assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF REWARDS · 50%1\.5 sim RF/);
       assert.match(await game.locator(".signal-activity").textContent(), /SESSION RESONANCETUNED/);
       assert.match(await game.locator(".signal-activity").textContent(), /BLOOMS DISCOVERED[1-3]\/4/);
+      if (width === 360) {
+        await page.locator(".rf-game-frame").screenshot({
+          path: resolve("games/signal-garden/media/signal-garden-activity-360.png"),
+        });
+      }
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
 
       // Discovery is historical for the session: harvesting the first bloom must
@@ -150,6 +155,11 @@ async function run(width, extended = false) {
       const discoveredRow = game.locator(".signal-collection>div").filter({ hasText: firstBloom });
       await discoveredRow.waitFor();
       assert.match(await discoveredRow.textContent(), /discovered/);
+      if (width === 360) {
+        await page.locator(".rf-game-frame").screenshot({
+          path: resolve("games/signal-garden/media/signal-garden-collection-360.png"),
+        });
+      }
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
 
       if (extended) {
