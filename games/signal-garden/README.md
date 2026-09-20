@@ -219,7 +219,8 @@ development and static builds require a real eligible wallet.
 
 ## Known limits and safety
 
-- The economy and the proposed burn/vault split are simulated.
+- The economy is simulated. The displayed 50% burn / 50% rewards values are
+  current-protocol reference values only; no live burn or reward routing occurs.
 - Garden placement is session-local because FriendSDK v0.1.2 has no persistence API.
   Interrupted settlement preserves the selected plot while the frame stays mounted.
   If the sandbox frame itself reloads, a recovered pending signal must be assigned
