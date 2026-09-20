@@ -249,7 +249,94 @@ async function run(width, extended = false) {
   console.log(`PASS Signal Garden at ${width}px: recovery, resync, responsive UI${extended ? ", full 15-signal repeat loop" : ""}.`);
 }
 
+
+async function runChildFrameReloadRecovery() {
+  await testGame(gameDirectory, {
+    width: 960,
+    height: 800,
+    check: async ({ page, game }) => {
+      const confirm = async () => {
+        const button = page.getByRole("button", { name: "Confirm preview", exact: true });
+        await button.waitFor();
+        await button.click();
+      };
+      const reloadChild = async () => {
+        const iframe = page.locator("iframe");
+        await iframe.evaluate(node => new Promise(resolve => {
+          node.addEventListener("load", () => resolve(true), { once: true });
+          node.src = node.src;
+        }));
+        await game.locator("#root > *").first().waitFor();
+        await game.getByText("Waiting for your Friend…", { exact: true }).waitFor({ state: "hidden" });
+        await page.locator(".rf-runtime-status").waitFor({ state: "hidden" });
+      };
+      const buySeed = async () => {
+        await game.getByRole("button", { name: "Buy a seed · 1 sim RF", exact: true }).click();
+        await game.getByRole("heading", { name: "Signal Seed exchange", exact: true }).waitFor();
+        await game.locator(".rf-frame-menu").getByRole("button", { name: "Buy one Signal Seed · 1 sim RF", exact: true }).click();
+        await confirm();
+        await game.getByRole("button", { name: "Choose a plot", exact: true }).waitFor();
+      };
+
+      // Keep one bloom, then reload only the sandbox child. The host ledger must
+      // survive while the session-local plot memory is rebuilt.
+      await buySeed();
+      await game.getByTestId("plot-5").click();
+      await confirm();
+      await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
+      await game.getByRole("button", { name: "Keep in garden", exact: true }).click();
+      assert.equal(await game.locator(".signal-plot.signal-filled").count(), 1);
+      await reloadChild();
+      assert.equal(await game.locator(".signal-plot.signal-filled").count(), 1,
+        "Child reload must rebuild kept inventory from the host ledger");
+      assert.match(await game.locator(".signal-metrics").textContent(), /SIM RF19SEEDS0SIM RF SPENT1/);
+      assert.match(await game.getByTestId("plot-1").getAttribute("aria-label"), /inspect/,
+        "Rebuilt inventory uses the documented deterministic first-open plot order");
+
+      // Commit a play but interrupt its settlement, then reload the child again.
+      // pendingPlot is intentionally session-local, so the reloaded game should
+      // ask for a resume plot while reusing the already-paid pending play.
+      await buySeed();
+      await game.locator("body").evaluate(() => {
+        const original = MessagePort.prototype.postMessage;
+        MessagePort.prototype.postMessage = function (message, ...args) {
+          if (window.__reloadFailNextSettle && message?.method === "settle") {
+            window.__reloadFailNextSettle = false;
+            setTimeout(() => this.dispatchEvent(new MessageEvent("message", {
+              data: { type: "friendsdk:response", id: message.id, error: "Fixture interrupted signal before child reload" },
+            })), 0);
+            return;
+          }
+          return original.call(this, message, ...args);
+        };
+        window.__reloadFailNextSettle = true;
+      });
+      await game.getByTestId("plot-7").click();
+      await confirm();
+      await game.getByRole("button", { name: "Resume signal", exact: true }).waitFor();
+      await reloadChild();
+
+      await game.getByRole("button", { name: "Choose resume plot", exact: true }).waitFor();
+      assert.match(await game.locator(".signal-action p").textContent(), /Choose an empty plot to resume it/);
+      assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0,
+        "Reloaded pending play must not request another purchase/play confirmation");
+
+      await game.getByTestId("plot-8").click();
+      await game.getByRole("heading", { name: "A new signal bloomed", exact: true }).waitFor();
+      assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0,
+        "Settling an already-paid preview play after reload needs no second confirmation");
+      await game.getByRole("button", { name: "Keep in garden", exact: true }).click();
+
+      assert.equal(await game.locator(".signal-plot.signal-filled").count(), 2);
+      assert.match(await game.locator(".signal-metrics").textContent(), /SIM RF18SEEDS0SIM RF SPENT2/);
+      assert.match(await game.getByTestId("plot-8").getAttribute("aria-label"), /inspect/);
+    },
+  });
+  console.log("PASS Signal Garden child-frame reload: kept inventory rebuild and pending-play recovery.");
+}
+
 await run(960, true);
 await run(760);
 await run(521);
 await run(360);
+await runChildFrameReloadRecovery();
