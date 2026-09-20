@@ -55,6 +55,17 @@ assert(index.includes("@rarefriends/friendsdk/runtime"));
 assert(index.includes("@rarefriends/friendsdk/frame"));
 assert(index.includes("@rarefriends/friendsdk/game"));
 assert(index.includes("@rarefriends/friendsdk/sprites"));
+for (const phrase of [
+  'className="signal-loading"',
+  "setRevision(value => value + 1)",
+  'window.matchMedia("(prefers-reduced-motion: reduce)")',
+  'role="group" aria-label="Twelve garden plots"',
+  'title="Friend signal plot" aria-hidden="true"',
+]) assert(index.includes(phrase), "Usability/accessibility implementation marker missing: " + phrase);
+assert(readme.includes("the game is silent by design"),
+  "README must explain why there is no game-level mute control");
+assert(readme.includes("Potential paired-asset path — not implemented"),
+  "README must keep the Economy Potential production path explicitly non-live");
 
 for (const phrase of [
   "PROTOCOL REF BURN · 50%",
@@ -87,6 +98,8 @@ for (const phrase of [
   'page.keyboard.press("Enter")',
   '.getByRole("button", { name: "Guide", exact: true }).tap()',
   "Every game button must expose an accessible name",
+  "touch target below 24px",
+  "Signal-plot semantics must remain in aria-labels after a bloom is planted",
   "Switching from Guide to activity must reset the menu body to the top",
   "Switching from Guide to collection must reset the menu body to the top",
   "await run(960, true)",

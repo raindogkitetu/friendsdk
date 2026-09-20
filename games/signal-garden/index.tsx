@@ -95,7 +95,7 @@ function FriendPortrait({ sprites, reducedMotion, bloomCount }: Readonly<{
     return () => cancelAnimationFrame(animation);
   }, [sprites, reducedMotion, bloomCount]);
   return <canvas ref={canvas} width="192" height="192" role="img"
-    aria-label={`${sprites.familyName} Rare Friend, animated from its canonical on-chain sprite`} />;
+    aria-label={`${sprites.familyName} Rare Friend, canonical on-chain sprite`} />;
 }
 
 /** A personalized, session-local garden. The SDK owns identity, balances and action confirmations. */
@@ -319,7 +319,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     <main className="signal-stage" inert={Boolean(menu) || paused || undefined}>
       <div className="signal-orbit signal-orbit-one" aria-hidden="true" />
       <div className="signal-orbit signal-orbit-two" aria-hidden="true" />
-      <div className="signal-grid" aria-label="Twelve garden plots">
+      <div className="signal-grid" role="group" aria-label="Twelve garden plots">
         {RING_CELLS.map((cell, plotIndex) => {
           const bloom = plots[plotIndex], meta = bloom ? BLOOMS[bloom.outcomeId - 1] : null;
           const column = (cell - 1) % 4 + 1, row = Math.floor((cell - 1) / 4) + 1;
@@ -327,10 +327,10 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
           return <button type="button" key={plotIndex} data-testid={`plot-${plotIndex + 1}`}
             className={`signal-plot ${bloom ? `signal-filled signal-tone-${meta?.tone}` : "signal-empty"}${anchor ? " signal-anchor" : ""}`}
             style={{ gridColumn: column, gridRow: row }} disabled={busy || paused || syncRequired}
-            aria-label={bloom ? `Plot ${plotIndex + 1}, ${meta?.name}, inspect` :
+            aria-label={bloom ? `Plot ${plotIndex + 1}, ${meta?.name}${anchor ? ", signal plot" : ""}, inspect` :
               `Plot ${plotIndex + 1}, empty${anchor ? ", signal plot" : ""}, plant here`}
             onClick={() => clickPlot(plotIndex)}>
-            {anchor && <span className="signal-anchor-dot" title="Friend signal plot" />}
+            {anchor && <span className="signal-anchor-dot" title="Friend signal plot" aria-hidden="true" />}
             {bloom ? <><BloomGlyph outcomeId={bloom.outcomeId}/><small>{meta?.short}</small></> : <><span className="signal-plus">+</span><small>{plotIndex + 1}</small></>}
           </button>;
         })}

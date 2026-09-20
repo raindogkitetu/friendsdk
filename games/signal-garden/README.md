@@ -165,9 +165,23 @@ Because the receipt tracks gross Seed purchases rather than net balance, harvest
 to reopen space and then repurchasing makes repeat simulated RF usage visible instead
 of erasing the prior loop.
 
-Future seasons can add community layouts, non-redeemable cosmetic habitats backed
-by RF spend and opt-in garden exhibitions. Trading, creator fees, persistent saves
-and wearable NFTs are not claimed as current SDK capabilities.
+### Potential paired-asset path — not implemented
+
+The Vibeathon also describes future token economies that can introduce a separate
+asset and pair it with $RAREFRIENDS. A reviewed Signal Garden season could therefore
+make persistent Bloom or habitat assets a **separate** layer outside FriendSDK v0.1.2:
+RF gameplay payments would still follow the then-current protocol routing, while
+the Bloom asset's issuance, RF market pair and any creator/trading-fee rules would
+need their own published contract and audit. Any redeemable player payout would
+remain backed by a separately funded reserve; the protocol reward half is not
+treated as prize funding.
+
+This submission does **not** deploy, mint, pair or trade such an asset. It is a
+documented production path, not a claimed current feature.
+
+Future seasons can also add community layouts, non-redeemable cosmetic habitats and
+opt-in garden exhibitions. Trading, creator fees, persistent saves and wearable NFTs
+are not claimed as current SDK capabilities.
 
 ## Run locally
 
@@ -223,7 +237,9 @@ the SDK's read-only test fixture. It verifies:
 - token-activity receipt, always-visible mobile RF spend, session resonance,
   bloom discovery, guide and reduced-motion controls;
 - visible phone-width action errors, non-blocking status overlays, double-click
-  locking, responsive-breakpoint/container bounds and absence of app scaffolding;
+  locking, 24 px minimum game touch targets, responsive-breakpoint/container bounds
+  and absence of app scaffolding;
+- accessible plot grouping and signal-plot semantics before and after planting;
 - child-frame reload recovery for kept inventory and an already-paid pending play;
 - accessible button names and a labeled Friend image canvas;
 - no browser, sandbox or unexpected signing errors.

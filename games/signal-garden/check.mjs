@@ -268,6 +268,9 @@ async function run(width, extended = false) {
                 box.top < stage.top - 1 || box.bottom > stage.bottom + 1) {
               issues.push(`Plot ${index + 1} clipped by stage`);
             }
+            if (box.width < 24 || box.height < 24) {
+              issues.push(`Plot ${index + 1} touch target below 24px`);
+            }
           });
         }
         for (const selector of [".signal-header>button", ".signal-metrics>span"]) {
@@ -277,6 +280,14 @@ async function run(width, extended = false) {
             if (box.left < -1 || box.right > body.right + 1 || box.top < -1 || box.bottom > body.bottom + 1) {
               issues.push(`Clipped control: ${selector}`);
             }
+          }
+        }
+        for (const selector of [".signal-header>button", ".signal-primary"]) {
+          for (const node of document.querySelectorAll(selector)) {
+            const style = getComputedStyle(node);
+            if (style.display === "none" || style.visibility === "hidden") continue;
+            const box = node.getBoundingClientRect();
+            if (box.width < 24 || box.height < 24) issues.push(`Touch target below 24px: ${selector}`);
           }
         }
         const status = document.querySelector(".signal-action p");
@@ -290,6 +301,11 @@ async function run(width, extended = false) {
       assert.equal(unnamedButtons, 0, "Every game button must expose an accessible name");
       assert.equal(await game.locator('canvas[role="img"][aria-label]').count(), 1,
         "The canonical Friend canvas must expose an image role and accessible name");
+      assert.equal(await game.locator('.signal-grid[role="group"][aria-label="Twelve garden plots"]').count(), 1,
+        "Garden plots must expose a named accessibility group");
+      assert.equal(await game.locator(".signal-anchor").evaluateAll(nodes =>
+        nodes.every(node => /signal plot/.test(node.getAttribute("aria-label") ?? ""))), true,
+        "Signal-plot semantics must remain in aria-labels after a bloom is planted");
       const expectedSpend = extended ? "15" : "3";
       assert.match(await game.locator(".signal-metrics").textContent(),
         new RegExp(`SEEDS0SIM RF SPENT${expectedSpend}`));
