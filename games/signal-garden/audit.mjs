@@ -3,8 +3,9 @@ import { readFile } from "node:fs/promises";
 
 const here = new URL("./", import.meta.url);
 const read = name => readFile(new URL(name, here), "utf8");
-const [index, readme, browserCheck, simulation, gameText] = await Promise.all([
+const [index, model, readme, browserCheck, simulation, gameText] = await Promise.all([
   read("index.tsx"),
+  read("model.ts"),
   read("README.md"),
   read("check.mjs"),
   read("simulate.mjs"),
@@ -29,6 +30,30 @@ const stale = [
 for (const phrase of stale) {
   assert.equal(combined.includes(phrase), false, "Stale Signal Garden wording returned: " + phrase);
 }
+
+const implementation = index + "\n" + model;
+for (const forbidden of [
+  "dangerouslySetInnerHTML",
+  "localStorage",
+  "sessionStorage",
+  "document.cookie",
+  "window.open(",
+  "eval(",
+  "new Function(",
+  "eth_sendTransaction",
+  "eth_sign",
+  "personal_sign",
+  "wallet_send",
+]) {
+  assert.equal(implementation.includes(forbidden), false,
+    "Signal Garden implementation contains forbidden/high-risk surface: " + forbidden);
+}
+assert.equal(index.includes("../../src/"), false,
+  "Signal Garden must consume FriendSDK through public package exports, not internal src paths");
+assert(index.includes("@rarefriends/friendsdk/runtime"));
+assert(index.includes("@rarefriends/friendsdk/frame"));
+assert(index.includes("@rarefriends/friendsdk/game"));
+assert(index.includes("@rarefriends/friendsdk/sprites"));
 
 for (const phrase of [
   "PROTOCOL REF BURN · 50%",
