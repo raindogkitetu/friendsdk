@@ -42,10 +42,11 @@ jobs:
       - run: node games/signal-garden/check.mjs
       - run: node scripts/dev-game.mjs build games/signal-garden
 
-      - name: Copy tested screenshots into preview
+      - name: Copy tested artifacts and provenance into preview
         run: |
           cp games/signal-garden/media/signal-garden-960.png games/signal-garden/.friendsdk/signal-garden-960.png
           cp games/signal-garden/media/signal-garden-360.png games/signal-garden/.friendsdk/signal-garden-360.png
+          printf '%s\n' "$GITHUB_SHA" > games/signal-garden/.friendsdk/SOURCE_COMMIT.txt
 
       - name: Verify static preview
         run: |
@@ -55,6 +56,7 @@ jobs:
           test -f games/signal-garden/.friendsdk/game.css
           test -f games/signal-garden/.friendsdk/signal-garden-960.png
           test -f games/signal-garden/.friendsdk/signal-garden-360.png
+          test "$(cat games/signal-garden/.friendsdk/SOURCE_COMMIT.txt)" = "$GITHUB_SHA"
 
       - name: Publish gh-pages
         env:
@@ -67,6 +69,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Deploy Signal Garden preview"
+          git commit -m "Deploy Signal Garden preview from ${GITHUB_SHA}"
           git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push --force origin gh-pages
