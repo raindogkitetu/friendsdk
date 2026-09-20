@@ -142,6 +142,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   function applyVerifiedState(state: GameSnapshot, recoveryPlot: number | null = null) {
     if (state.friendId !== friendId) throw new Error("Verified state belongs to a different Friend.");
     setSnapshot(state);
+    if (!state.plays.some(play => play.outcomeId === null)) setPendingPlot(null);
     const deferred = deferredAfter.current;
     deferredAfter.current = null;
     if (deferred) deferred(state);
