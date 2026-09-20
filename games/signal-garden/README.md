@@ -9,7 +9,7 @@ wallet connection, owned-Friend picker, fresh eligibility check, sandbox, previe
 ledger and action confirmations. The game receives only the verified Friend ID,
 the fixed SDK action client and pause state.
 
-![Signal Garden at desktop size](media/signal-garden-960.png)
+![Signal Garden at desktop size](https://raindogkitetu.github.io/friendsdk/signal-garden-960.png)
 
 ## Economy at a glance
 

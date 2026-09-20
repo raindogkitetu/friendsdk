@@ -42,12 +42,19 @@ jobs:
       - run: node games/signal-garden/check.mjs
       - run: node scripts/dev-game.mjs build games/signal-garden
 
+      - name: Copy tested screenshots into preview
+        run: |
+          cp games/signal-garden/media/signal-garden-960.png games/signal-garden/.friendsdk/signal-garden-960.png
+          cp games/signal-garden/media/signal-garden-360.png games/signal-garden/.friendsdk/signal-garden-360.png
+
       - name: Verify static preview
         run: |
           test -f games/signal-garden/.friendsdk/index.html
           test -f games/signal-garden/.friendsdk/game.html
           test -f games/signal-garden/.friendsdk/game.js
           test -f games/signal-garden/.friendsdk/game.css
+          test -f games/signal-garden/.friendsdk/signal-garden-960.png
+          test -f games/signal-garden/.friendsdk/signal-garden-360.png
 
       - name: Publish gh-pages
         env:
