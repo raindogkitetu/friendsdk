@@ -69,7 +69,13 @@ for (const phrase of [
   "2.5 sim RF free stake remains",
   "Do not add the 8.5 and 5/5 figures together.",
   "960, 760, 521 and 360",
+  "keep the first twelve blooms",
+  "test-only synchronization/readiness fixes",
 ]) assert(readme.includes(phrase), "README is missing audited statement: " + phrase);
+assert.equal(readme.includes("fifteen `buy → play → settle → redeem`"), false,
+  "README must not claim all 15 garden cycles redeem a bloom");
+assert.equal((readme.match(/\| `simulate\.mjs` \|/g) ?? []).length, 1,
+  "README Files table must list simulate.mjs exactly once");
 
 for (const phrase of [
   "Official desktop viewport height must be 640px",

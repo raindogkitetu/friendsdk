@@ -114,9 +114,9 @@ node games/signal-garden/simulate.mjs
 ```
 
 It parses the same `game.json` through FriendSDK and drives the SDK's actual
-`createGamePreview` ledger through fifteen `buy → play → settle → redeem`
-cycles using the real 12-slot garden order: keep the first twelve blooms, then
-harvest one bloom before each of signals 13–15 to reopen a slot. It checks 10,000
+`createGamePreview` ledger through fifteen buys/plays/settlements using the real
+12-slot garden order: keep the first twelve blooms, then redeem one kept bloom
+before each of signals 13–15 to reopen a slot. It checks 10,000
 bps, 0.85 sim RF expected harvest, 2.5 sim RF maximum harvest, the 50/50 protocol-reference
 split, the maximum-reward house-bankroll path (2.5 sim RF free stake remains),
 and the minimum-reward player-balance path (6.2 sim RF remains from the 20 sim RF
@@ -222,6 +222,7 @@ the SDK's read-only test fixture. It verifies:
   bloom discovery, guide and reduced-motion controls;
 - visible phone-width action errors, non-blocking status overlays, double-click
   locking, responsive-breakpoint/container bounds and absence of app scaffolding;
+- child-frame reload recovery for kept inventory and an already-paid pending play;
 - no browser, sandbox or unexpected signing errors.
 
 Mock identity and RPC responses exist only inside the automated test harness. Normal
@@ -232,8 +233,10 @@ development and static builds require a real eligible wallet.
 Signal Garden uses the official FriendSDK v0.1.2 runtime. The fork's `src/`,
 `contracts/`, `assets/`, package manifest/lockfile and runtime build helpers are
 unchanged from the official v0.1.2 tag. Changes outside `games/signal-garden/` are
-limited to CI/deploy wiring and a browser-test synchronization fix that waits for
-input to actually resume instead of assuming a fixed 150 ms scheduler delay.
+limited to CI/deploy wiring and test-only synchronization/readiness fixes: one waits
+for input to actually resume instead of assuming a fixed 150 ms scheduler delay,
+and one waits for a watch-rebuilt hashed asset to become readable before asserting
+its contents.
 
 ## Known limits and safety
 
@@ -261,9 +264,8 @@ input to actually resume instead of assuming a fixed 150 ms scheduler delay.
 | `model.ts` | Bloom metadata, Friend-derived signal plots and harmony scoring |
 | `style.css` | Responsive desktop/mobile presentation and reduced-motion rules |
 | `game.json` | Exact RF price, outcome weights and fixed rewards |
-| `simulate.mjs` | Deterministic economy assertions |
+| `simulate.mjs` | Deterministic probability boundaries and SDK-ledger bankroll stress proof |
 | `check.mjs` | Focused browser flows at 960, 760, 521 and 360 px; 960 also runs the full 15-signal loop |
-| `simulate.mjs` | SDK-ledger bankroll stress proof |
 | `audit.mjs` | Prevents stale economy/rules/docs/test claims from drifting back in |
 
 ## Credits
