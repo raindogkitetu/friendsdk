@@ -216,7 +216,8 @@ the SDK's read-only test fixture. It verifies:
 - post-action read failure recovery: one failed read retries automatically, while
   repeated read failure blocks further economy actions until verified refresh;
 - reveal, keep, plot inspection and harvest;
-- a 960 px extended run that fills all 12 plots, verifies the full-garden purchase
+- a deterministic 960 px extended run that exercises all four bloom outcomes,
+  reaches 4/4 Bloom discovery, fills all 12 plots, verifies the full-garden purchase
   block, harvests to reopen space, and reaches the 15-signal EVERGREEN tier;
 - token-activity receipt, always-visible mobile RF spend, session resonance,
   bloom discovery, guide and reduced-motion controls;

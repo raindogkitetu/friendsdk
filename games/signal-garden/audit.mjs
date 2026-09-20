@@ -81,6 +81,8 @@ for (const phrase of [
   "Official desktop viewport height must be 640px",
   "runChildFrameReloadRecovery",
   "PROTOCOL REF BURN · 50%7\\.5 sim RF",
+  "BLOOMS DISCOVERED4\\/4",
+  "await page.evaluate",
   "await run(960, true)",
   "await run(760)",
   "await run(521)",
