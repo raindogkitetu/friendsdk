@@ -89,8 +89,8 @@ async function run(width) {
       await game.getByRole("button", { name: "View activity receipt", exact: true }).click();
       await game.getByRole("heading", { name: "Token activity receipt", exact: true }).waitFor();
       assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND3 RF/);
-      assert.match(await game.locator(".signal-activity").textContent(), /PROPOSED BURN · 10%0\.3 RF/);
-      assert.match(await game.locator(".signal-activity").textContent(), /SEASON VAULT · 5%0\.15 RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /SG MODEL BURN · 10%0\.3 RF/);
+      assert.match(await game.locator(".signal-activity").textContent(), /SG MODEL VAULT · 5%0\.15 RF/);
       assert.match(await game.locator(".signal-activity").textContent(), /SESSION RESONANCETUNED/);
       assert.match(await game.locator(".signal-activity").textContent(), /BLOOMS DISCOVERED[1-3]\/4/);
       await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();

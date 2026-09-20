@@ -325,8 +325,8 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         <div className="signal-activity-grid">
           <div><small>SEEDS ACQUIRED</small><strong>{acquiredSeeds.toString()}</strong></div>
           <div><small>SIGNALS PLANTED</small><strong>{snapshot.plays.length}</strong></div>
-          <div><small>PROPOSED BURN · 10%</small><strong>{rf(proposedBurn)}</strong></div>
-          <div><small>SEASON VAULT · 5%</small><strong>{rf(proposedVault)}</strong></div>
+          <div><small>SG MODEL BURN · 10%</small><strong>{rf(proposedBurn)}</strong></div>
+          <div><small>SG MODEL VAULT · 5%</small><strong>{rf(proposedVault)}</strong></div>
         </div>
         <div className="signal-session-goals">
           <div><small>SESSION RESONANCE</small><strong>{resonance.name}</strong>
@@ -334,7 +334,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
           <div><small>BLOOMS DISCOVERED</small><strong>{discoveredBloomCount}/4</strong>
             <span>Discovery survives harvest for this runtime session.</span></div>
         </div>
-        <p className="signal-activity-note"><strong>Model only.</strong> The preview spends no live RF and performs no burn or vault transfer. The 10% burn + 5% vault split is this entry's prototype model, not current Rare Friends protocol routing. Any live version must be reworked and reviewed against the then-current protocol rules, with every reward fully funded and explicit wallet confirmations.</p>
+        <p className="signal-activity-note"><strong>Signal Garden model only.</strong> The preview spends no live RF and performs no burn or vault transfer. Current Rare Friends public docs describe general gameplay payments as 50% burn / 50% rewards; this entry's 10% burn + 5% vault concept is not current protocol routing. Any live version must be redesigned and reviewed against the then-current rules, with every reward fully funded and explicit wallet confirmations.</p>
       </div> : menu === "rules" ? <div className="signal-menu signal-rules">
         <p><strong>1.</strong> Buy a 1 RF Signal Seed. <strong>2.</strong> Choose an empty plot. <strong>3.</strong> Keep the revealed bloom for harmony, or harvest its fixed RF value.</p>
         <p>Your verified <strong>{sprites.familyName} Friend #{friendId.toString()}</strong> is the heart of this garden. Its on-chain family makes <strong>{affinity.name}</strong> its affinity; its seed marks three glowing signal plots. Affinity blooms and signal plots add non-financial harmony bonuses. They never change the published RF odds.</p>
