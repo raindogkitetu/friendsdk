@@ -11,6 +11,15 @@ async function run(width, extended = false) {
     height: 800,
     screenshot: resolve(`games/signal-garden/media/signal-garden-${width}.png`),
     check: async ({ page, game }) => {
+      const frameBox = await page.locator(".rf-game-frame").boundingBox();
+      assert(frameBox, "SDK game frame must be mounted");
+      if (width === 960) {
+        assert.equal(Math.round(frameBox.width), 960, "Official desktop viewport width must be 960px");
+        assert.equal(Math.round(frameBox.height), 640, "Official desktop viewport height must be 640px");
+      }
+      assert.match(await game.locator(".signal-metrics").textContent(), /SIM RF20SEEDS0SIM RF SPENT0/,
+        "Preview must start at the SDK runtime's 20 sim RF balance with zero spend");
+
       const confirm = async () => {
         const button = page.getByRole("button", { name: "Confirm preview", exact: true });
         await button.waitFor();
