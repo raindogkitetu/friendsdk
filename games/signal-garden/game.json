@@ -1,0 +1,11 @@
+{
+  "name": "Signal Garden",
+  "consumable": "Signal Seed",
+  "price": "1000000000000000000",
+  "outcomes": [
+    { "name": "Dewbud", "chanceBps": 5000, "reward": "400000000000000000" },
+    { "name": "Sunpetal", "chanceBps": 3000, "reward": "1000000000000000000" },
+    { "name": "Prismvine", "chanceBps": 1500, "reward": "1500000000000000000" },
+    { "name": "Starbloom", "chanceBps": 500, "reward": "2500000000000000000" }
+  ]
+}
