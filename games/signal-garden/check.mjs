@@ -20,6 +20,22 @@ async function run(width, extended = false) {
       assert.match(await game.locator(".signal-metrics").textContent(), /SIM RF20SEEDS0SIM RF SPENT0/,
         "Preview must start at the SDK runtime's 20 sim RF balance with zero spend");
 
+      // Prove the documented input modes instead of inferring them from native
+      // buttons. Desktop activates Guide from keyboard focus; phone uses a real
+      // touch event through Playwright's touch-enabled context.
+      if (width === 960) {
+        const guide = game.getByRole("button", { name: "Guide", exact: true });
+        await guide.focus();
+        await page.keyboard.press("Enter");
+        await game.getByText(/Its on-chain family makes/).waitFor();
+        await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).click();
+      }
+      if (width === 360) {
+        await game.getByRole("button", { name: "Guide", exact: true }).tap();
+        await game.getByText(/Its on-chain family makes/).waitFor();
+        await game.locator(".rf-frame-menu").getByRole("button", { name: /^Close / }).tap();
+      }
+
       if (extended) {
         await page.evaluate(() => {
           const original = crypto.getRandomValues.bind(crypto);
@@ -265,6 +281,11 @@ async function run(width, extended = false) {
       });
       assert.deepEqual(problems, []);
       assert.equal(await game.locator("nav,.rf-game-frame").count(), 0, "Game must not contain app scaffolding");
+      const unnamedButtons = await game.locator("button").evaluateAll(nodes =>
+        nodes.filter(node => !(node.getAttribute("aria-label") || node.textContent?.trim())).length);
+      assert.equal(unnamedButtons, 0, "Every game button must expose an accessible name");
+      assert.equal(await game.locator('canvas[role="img"][aria-label]').count(), 1,
+        "The canonical Friend canvas must expose an image role and accessible name");
       const expectedSpend = extended ? "15" : "3";
       assert.match(await game.locator(".signal-metrics").textContent(),
         new RegExp(`SEEDS0SIM RF SPENT${expectedSpend}`));

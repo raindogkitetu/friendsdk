@@ -210,6 +210,7 @@ The focused browser check runs the real sandboxed runtime at 960, 760, 521 and
 the SDK's read-only test fixture. It verifies:
 
 - wallet/Friend-gated runtime startup and canonical artwork;
+- direct keyboard activation at desktop width and real touch activation at phone width;
 - seed purchase and confirmation;
 - interrupted settlement recovery without a second seed or play confirmation,
   preserving the originally selected plot and rejecting relocation while pending;
@@ -224,6 +225,7 @@ the SDK's read-only test fixture. It verifies:
 - visible phone-width action errors, non-blocking status overlays, double-click
   locking, responsive-breakpoint/container bounds and absence of app scaffolding;
 - child-frame reload recovery for kept inventory and an already-paid pending play;
+- accessible button names and a labeled Friend image canvas;
 - no browser, sandbox or unexpected signing errors.
 
 Mock identity and RPC responses exist only inside the automated test harness. Normal
