@@ -1,3 +1,4 @@
+// Modified in raindogkitetu/friendsdk: wait for verified input resume in CI instead of a fixed scheduler delay.
 // npm run build
 // npm run check:browser
 import assert from 'node:assert/strict';

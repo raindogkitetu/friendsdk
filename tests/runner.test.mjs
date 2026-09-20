@@ -1,3 +1,4 @@
+// Modified in raindogkitetu/friendsdk: wait for watch-rebuilt assets to become readable before asserting contents.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, mkdir, readdir, rm, stat, symlink } from 'node:fs/promises';

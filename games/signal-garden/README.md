@@ -250,12 +250,16 @@ development and static builds require a real eligible wallet.
 ### Fork integrity
 
 Signal Garden uses the official FriendSDK v0.1.2 runtime. The fork's `src/`,
-`contracts/`, `assets/`, package manifest/lockfile and runtime build helpers are
-unchanged from the official v0.1.2 tag. Changes outside `games/signal-garden/` are
-limited to CI/deploy wiring and test-only synchronization/readiness fixes: one waits
-for input to actually resume instead of assuming a fixed 150 ms scheduler delay,
-and one waits for a watch-rebuilt hashed asset to become readable before asserting
-its contents.
+`contracts/`, `assets/`, license/notice, package manifest/lockfile and runtime
+build helpers are unchanged from official release commit `762d6f58a73ace723f7f82dc1a61bfa036c21edc`. Both CI
+and public deployment run a direct `git diff --exit-code` against that commit on
+those protected paths before proceeding.
+
+Changes outside `games/signal-garden/` are limited to CI/deploy wiring and
+test-only synchronization/readiness fixes. Modified official test/workflow files
+carry explicit fork-modification comments. Public preview artifacts include the
+FriendSDK Apache `LICENSE`, root `NOTICE.md`, Signal Garden notice and bundled
+dependency license comments.
 
 ## Known limits and safety
 

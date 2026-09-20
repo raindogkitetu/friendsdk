@@ -1,3 +1,4 @@
+# Signal Garden fork-specific public preview workflow.
 name: Deploy Signal Garden preview
 
 on:
@@ -25,14 +26,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
+
+      - name: Verify official FriendSDK v0.1.2 runtime integrity
+        run: |
+          git diff --exit-code 762d6f58a73ace723f7f82dc1a61bfa036c21edc -- \
+            src contracts assets LICENSE NOTICE.md package.json package-lock.json \
+            scripts/dev-game.mjs scripts/testing.mjs scripts/browser-fixture.mjs
 
       - run: npm ci --ignore-scripts
       - run: npm run build
@@ -43,7 +51,7 @@ jobs:
       - run: node games/signal-garden/check.mjs
 
       - name: Upload audited screenshots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: signal-garden-audit
           path: games/signal-garden/media/signal-garden-*.png
@@ -56,6 +64,9 @@ jobs:
         run: |
           cp games/signal-garden/media/signal-garden-960.png games/signal-garden/.friendsdk/signal-garden-960.png
           cp games/signal-garden/media/signal-garden-360.png games/signal-garden/.friendsdk/signal-garden-360.png
+          cp LICENSE games/signal-garden/.friendsdk/LICENSE
+          cp NOTICE.md games/signal-garden/.friendsdk/NOTICE.md
+          cp games/signal-garden/NOTICE.md games/signal-garden/.friendsdk/SIGNAL_GARDEN_NOTICE.md
           printf '%s\n' "$GITHUB_SHA" > games/signal-garden/.friendsdk/SOURCE_COMMIT.txt
 
       - name: Verify static preview
@@ -66,9 +77,15 @@ jobs:
           test -f games/signal-garden/.friendsdk/game.css
           test -f games/signal-garden/.friendsdk/signal-garden-960.png
           test -f games/signal-garden/.friendsdk/signal-garden-360.png
+          test -f games/signal-garden/.friendsdk/LICENSE
+          test -f games/signal-garden/.friendsdk/NOTICE.md
+          test -f games/signal-garden/.friendsdk/SIGNAL_GARDEN_NOTICE.md
           test "$(cat games/signal-garden/.friendsdk/SOURCE_COMMIT.txt)" = "$GITHUB_SHA"
           cat > /tmp/signal-garden-expected-files.txt <<'EOF'
           .friendsdk-output.json
+          LICENSE
+          NOTICE.md
+          SIGNAL_GARDEN_NOTICE.md
           SOURCE_COMMIT.txt
           game-layout.css
           game.css
@@ -87,6 +104,8 @@ jobs:
           ! grep -Eq '__friendWalletTest|Fixture interrupted|0x1111111111111111111111111111111111111111' games/signal-garden/.friendsdk/game.js
           ! grep -Eq '__friendWalletTest|Fixture interrupted|0x1111111111111111111111111111111111111111' games/signal-garden/.friendsdk/runtime.js
           grep -q 'rpc.mainnet.chain.robinhood.com' games/signal-garden/.friendsdk/runtime.js
+          grep -q 'Bundled license information' games/signal-garden/.friendsdk/game.js
+          grep -q 'Bundled license information' games/signal-garden/.friendsdk/runtime.js
 
       - name: Publish gh-pages
         env:
