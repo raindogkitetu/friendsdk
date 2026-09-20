@@ -367,7 +367,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
       </button>
     </footer>
 
-    {menu && <GameMenu title={menuTitle} onClose={busy ? undefined : () => navigate(null)}>
+    {menu && <GameMenu key={menu} title={menuTitle} onClose={busy ? undefined : () => navigate(null)}>
       {menu === "shop" ? <div className="signal-menu">
         <p>Each Signal Seed costs <strong>{displayRf(definition.price)}</strong>. Planting consumes one seed and reveals one redeemable bloom.</p>
         <table><thead><tr><th>Bloom</th><th>Chance</th><th>Harvest</th></tr></thead><tbody>

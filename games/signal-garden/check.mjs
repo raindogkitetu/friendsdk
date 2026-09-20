@@ -166,6 +166,8 @@ async function run(width, extended = false) {
       await game.getByRole("button", { name: "Guide", exact: true }).click();
       await game.getByRole("button", { name: "View activity receipt", exact: true }).click();
       await game.getByRole("heading", { name: "Token activity receipt", exact: true }).waitFor();
+      assert.equal(await game.locator(".rf-frame-menu-body").evaluate(node => node.scrollTop), 0,
+        "Switching from Guide to activity must reset the menu body to the top");
       assert.match(await game.locator(".signal-activity").textContent(), /SIMULATED SESSION SPEND3 sim RF/);
       assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF BURN · 50%1\.5 sim RF/);
       assert.match(await game.locator(".signal-activity").textContent(), /PROTOCOL REF REWARDS · 50%1\.5 sim RF/);
@@ -183,6 +185,8 @@ async function run(width, extended = false) {
       // also available in the 360px layout where the dock collection button hides.
       await game.getByRole("button", { name: "Guide", exact: true }).click();
       await game.getByRole("button", { name: "View collection", exact: true }).click();
+      assert.equal(await game.locator(".rf-frame-menu-body").evaluate(node => node.scrollTop), 0,
+        "Switching from Guide to collection must reset the menu body to the top");
       const discoveredRow = game.locator(".signal-collection>div").filter({ hasText: firstBloom });
       await discoveredRow.waitFor();
       assert.match(await discoveredRow.textContent(), /discovered/);

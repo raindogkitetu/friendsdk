@@ -86,6 +86,8 @@ for (const phrase of [
   'page.keyboard.press("Enter")',
   '.getByRole("button", { name: "Guide", exact: true }).tap()',
   "Every game button must expose an accessible name",
+  "Switching from Guide to activity must reset the menu body to the top",
+  "Switching from Guide to collection must reset the menu body to the top",
   "await run(960, true)",
   "await run(760)",
   "await run(521)",
