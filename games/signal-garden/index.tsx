@@ -233,8 +233,8 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   const proposedVault = sessionSpend / 20n;
   const settledSignals = snapshot.plays.filter(play => play.outcomeId !== null).length;
   const discoveredBloomCount = new Set(snapshot.plays.flatMap(play => play.outcomeId ? [play.outcomeId] : [])).size;
-  const resonance = settledSignals >= 24 ? { name: "INFINITE", next: null } :
-    settledSignals >= 12 ? { name: "HARMONIC", next: 24 } :
+  const resonance = settledSignals >= 15 ? { name: "EVERGREEN", next: null } :
+    settledSignals >= 12 ? { name: "HARMONIC", next: 15 } :
     settledSignals >= 6 ? { name: "RADIANT", next: 12 } :
     settledSignals >= 3 ? { name: "TUNED", next: 6 } : { name: "AWAKENING", next: 3 };
   const signalsToNext = resonance.next === null ? 0 : resonance.next - settledSignals;
@@ -420,7 +420,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
       </div> : menu === "rules" ? <div className="signal-menu signal-rules">
         <p><strong>1.</strong> Buy a {displayRf(definition.price)} Signal Seed. <strong>2.</strong> Choose an empty plot. <strong>3.</strong> Keep the revealed bloom for harmony, or harvest its fixed {currencyLabel} value.</p>
         <p>Your verified <strong>{sprites.familyName} Friend #{friendId.toString()}</strong> is the heart of this garden. Its on-chain family makes <strong>{affinity.name}</strong> its affinity; its seed marks three glowing signal plots. Affinity blooms and signal plots add non-financial harmony bonuses. They never change the published RF odds.</p>
-        <p>A full garden has twelve blooms. Harvesting opens a plot so the loop can continue. Bloom discovery remains recorded after harvest, and session resonance advances at 3, 6, 12 and 24 settled signals. These goals are non-financial and never change odds or rewards.</p>
+        <p>A full garden has twelve blooms. Harvesting opens a plot so the loop can continue. Bloom discovery remains recorded after harvest, and session resonance advances at 3, 6, 12 and 15 settled signals. These goals are non-financial and never change odds or rewards.</p>
         <p>The garden layout, discovery and resonance are session-local; a full runtime reload resets them. The SDK ledger retains kept items only during the runtime session.</p>
         <p><strong>Everything is simulated.</strong> No RF, signature or transaction is used in this preview. A production version would require a reviewed contract and explicit wallet confirmations.</p>
         <div className="signal-menu-actions">

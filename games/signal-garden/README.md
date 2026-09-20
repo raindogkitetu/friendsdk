@@ -65,7 +65,7 @@ seeds, signals planted and simulated RF spent. It also calculates the matching
 
 Two non-financial session goals make repeat planting useful without changing RF odds:
 **Bloom discovery** remembers which of the four signals have appeared even after
-harvest, and **Resonance** advances at 3, 6, 12 and 24 settled signals. Both reset
+harvest, and **Resonance** advances at 3, 6, 12 and 15 settled signals. Both reset
 with the runtime session and never increase rewards.
 
 Mouse, touch and keyboard navigation are supported. All interactive plots and
@@ -93,6 +93,7 @@ does not spend RF, request a signature or send a transaction.
 | Backing | Every purchased or pending seed reserves 2.5 RF; kept blooms retain their fixed liability |
 | Harvest expiry | None |
 | Preview starting balance | 20 simulated RF, supplied by the SDK runtime |
+| Preview prize stake | 25 simulated RF (10× the 2.5 RF maximum prize), supplied by the SDK runtime |
 | Persistence | Host ledger lasts for the runtime session; a full reload resets the preview |
 
 The deterministic economy proof is runnable with:
@@ -101,8 +102,11 @@ The deterministic economy proof is runnable with:
 node games/signal-garden/simulate.mjs
 ```
 
-It checks that weights total 10,000 bps, expected harvest is exactly 0.85 RF and
-the 0.15 RF gap exactly matches the proposed 0.10 RF burn plus 0.05 RF season vault.
+It checks that weights total 10,000 bps, expected harvest is exactly 0.85 RF,
+maximum harvest is 2.5 RF, the 0.15 RF gap exactly matches the proposed 0.10 RF
+burn plus 0.05 RF season vault, and the SDK preview's 25 RF starting prize stake
+can fund the 15-signal peak Resonance tier even if every result is the maximum
+2.5 RF reward and each bloom is immediately harvested to reopen space.
 
 ### Harmony scoring
 
