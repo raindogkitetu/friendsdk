@@ -244,6 +244,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     if (locked.current || busy || paused) return;
     setMenu(next); setError(""); setMessage("");
   };
+  const inform = (text: string) => { setError(""); setMessage(text); };
   const buySeed = () => void act(() => client.buy(1n), () => {
     setMessage("One simulated Signal Seed is ready. Choose an empty plot.");
     setMenu(null);
@@ -282,7 +283,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     setSelectedPlot(plotIndex);
     if (bloom) { setMenu("plot"); return; }
     if (pending && pendingPlot !== null && plotIndex !== pendingPlot) {
-      setMessage(`The pending signal belongs to plot ${pendingPlot + 1}. Resume it there.`);
+      inform(`The pending signal belongs to plot ${pendingPlot + 1}. Resume it there.`);
       return;
     }
     if (pending || snapshot.consumables > 0n) plant(pendingPlot ?? plotIndex);
@@ -348,8 +349,8 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
           disabled={busy || paused || (!syncRequired && firstEmpty < 0)}
           onClick={() => syncRequired ? void refreshVerifiedState() :
             pending && pendingPlot !== null ? plant(pendingPlot) :
-            pending ? setMessage("Choose an empty plot to place the pending signal.") :
-            snapshot.consumables > 0n ? setMessage("Choose any empty plot around your Friend.") : navigate("shop")}>
+            pending ? inform("Choose an empty plot to place the pending signal.") :
+            snapshot.consumables > 0n ? inform("Choose any empty plot around your Friend.") : navigate("shop")}>
           {syncRequired ? "Refresh state" : pending && pendingPlot !== null ? "Resume signal" :
             pending ? "Choose resume plot" : snapshot.consumables > 0n ? "Choose a plot" :
             `Buy a seed · 1 ${currencyLabel}`}
