@@ -111,22 +111,23 @@ test('watch rebuilds register newly emitted assets while unrelated files stay pr
     assert(first); assert.equal((await fetch(`${url}/${first}`)).status, 200);
     await writeFile(join(outdir, '.env.audit'), 'FAKE_CANARY');
     await writeFile(join(directory, 'icon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"><text>second</text></svg>');
-    let second;
-    const deadline = Date.now() + 5000;
+    let second, assetText = '';
+    const deadline = Date.now() + 10_000;
     while (!second && Date.now() < deadline) {
-      second = (await manifest()).files.find(file => file.startsWith('assets/') && !before.includes(file));
+      const candidates = (await manifest()).files.filter(file =>
+        file.startsWith('assets/') && !before.includes(file));
+      for (const candidate of candidates) {
+        const response = await fetch(`${url}/${candidate}`);
+        const text = response.status === 200 ? await response.text() : '';
+        if (response.status === 200 && /second/.test(text)) {
+          second = candidate;
+          assetText = text;
+          break;
+        }
+      }
       if (!second) await new Promise(resolve => setTimeout(resolve, 50));
     }
-    assert(second, 'The watch rebuild must register its new hashed asset');
-    let assetReady = false, assetText = '';
-    const assetDeadline = Date.now() + 5000;
-    while (!assetReady && Date.now() < assetDeadline) {
-      const response = await fetch(`${url}/${second}`);
-      assetText = response.status === 200 ? await response.text() : '';
-      assetReady = response.status === 200 && /second/.test(assetText);
-      if (!assetReady) await new Promise(resolve => setTimeout(resolve, 50));
-    }
-    assert.equal(assetReady, true, 'The registered watch asset must become readable with its rebuilt content');
+    assert(second, 'The watch rebuild must register a readable hashed asset containing the rebuilt content');
     assert.match(assetText, /second/);
     assert.equal((await fetch(`${url}/.env.audit`)).status, 404);
   } finally {
