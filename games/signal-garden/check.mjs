@@ -201,6 +201,17 @@ async function run(width, extended = false) {
             issues.push(`Outside viewport: ${selector}`);
           }
         }
+        const stage = document.querySelector(".signal-stage")?.getBoundingClientRect();
+        if (!stage) issues.push("Missing .signal-stage");
+        else {
+          document.querySelectorAll(".signal-plot").forEach((node, index) => {
+            const box = node.getBoundingClientRect();
+            if (box.left < stage.left - 1 || box.right > stage.right + 1 ||
+                box.top < stage.top - 1 || box.bottom > stage.bottom + 1) {
+              issues.push(`Plot ${index + 1} clipped by stage`);
+            }
+          });
+        }
         for (const selector of [".signal-header>button", ".signal-metrics>span"]) {
           for (const node of document.querySelectorAll(selector)) {
             if (getComputedStyle(node).display === "none") continue;
