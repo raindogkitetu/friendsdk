@@ -167,6 +167,8 @@ async function run(width, extended = false) {
         assert.match(await game.locator(".signal-resonance").textContent(), /HARMONIC/);
         const fullAction = game.locator(".signal-primary");
         assert.equal(await fullAction.isDisabled(), true, "A full garden must block another seed purchase");
+        assert.equal((await fullAction.textContent())?.trim(), "Garden full");
+        assert.match(await game.locator(".signal-action p").textContent(), /Harvest a bloom to reopen a plot/);
 
         // Reopen one slot, grow signal 14, reopen again, then grow signal 15.
         // This proves the advertised repeat loop and peak Resonance in the real UI.

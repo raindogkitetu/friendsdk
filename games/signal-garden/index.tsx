@@ -295,7 +295,9 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     busy ? "Waiting for preview confirmation…" :
     pending && pendingPlot !== null ? `Signal pending for plot ${pendingPlot + 1}. Resume it—no second seed is spent.` :
     pending ? "A signal is pending. Choose an empty plot to resume it—no second seed is spent." :
-    snapshot.consumables > 0n ? "Seed ready. Choose an empty plot." : "Buy a seed, then choose where it grows.");
+    snapshot.consumables > 0n ? "Seed ready. Choose an empty plot." :
+    emptyCount === 0 ? "Garden full. Harvest a bloom to reopen a plot." :
+    "Buy a seed, then choose where it grows.");
   const menuTitle = menu === "shop" ? "Signal Seed exchange" : menu === "collection" ? "Bloom collection" :
     menu === "activity" ? "Token activity receipt" : menu === "rules" ? "How the garden works" : menu === "settings" ? "Garden settings" :
     menu === "reveal" ? "A new signal bloomed" : "Plot memory";
@@ -354,7 +356,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
             snapshot.consumables > 0n ? inform("Choose any empty plot around your Friend.") : navigate("shop")}>
           {syncRequired ? "Refresh state" : pending && pendingPlot !== null ? "Resume signal" :
             pending ? "Choose resume plot" : snapshot.consumables > 0n ? "Choose a plot" :
-            `Buy a seed · 1 ${currencyLabel}`}
+            firstEmpty < 0 ? "Garden full" : `Buy a seed · 1 ${currencyLabel}`}
         </button>
         <p className={error ? "signal-error" : ""} role={error ? "alert" : "status"} aria-live="polite">{status}</p>
       </div>
