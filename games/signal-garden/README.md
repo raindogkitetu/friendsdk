@@ -198,7 +198,8 @@ the SDK's read-only test fixture. It verifies:
 - reveal, keep, plot inspection and harvest;
 - token-activity receipt, always-visible mobile RF spend, session resonance,
   bloom discovery, guide and reduced-motion controls;
-- desktop/mobile container bounds and absence of app scaffolding;
+- visible phone-width action errors, double-click locking, desktop/mobile container
+  bounds and absence of app scaffolding;
 - no browser, sandbox or unexpected signing errors.
 
 Mock identity and RPC responses exist only inside the automated test harness. Normal
@@ -211,7 +212,9 @@ development and static builds require a real eligible wallet.
   Interrupted settlement preserves the selected plot while the frame stays mounted.
   If the sandbox frame itself reloads, a recovered pending signal must be assigned
   to an empty plot again, and visible kept blooms are rebuilt from host inventory;
-  exact prior plot positions are not retained.
+  exact prior plot positions are not retained. Because harmony includes plot-specific
+  bonuses, the reconstructed non-financial harmony score may also differ after a
+  child-frame reload.
 - A full runtime reload resets simulated balances and inventory.
 - Trading, swaps, creator fees, additional-currency actions, wearables and live
   upgrades are not implemented.

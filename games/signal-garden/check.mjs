@@ -50,12 +50,19 @@ async function run(width) {
         window.__signalFailReadCount = 0;
         window.__signalFailNextSettle = true;
       });
-      await game.getByTestId("plot-5").click();
+      await game.locator("body").evaluate(() => {
+        document.querySelector('[data-testid="plot-5"]')?.click();
+        document.querySelector('[data-testid="plot-6"]')?.click();
+      });
       await confirm();
       await game.getByRole("button", { name: "Resume signal", exact: true }).waitFor();
+      const dockStatus = game.locator(".signal-action p");
+      assert.equal(await dockStatus.isVisible(), true, "Action errors must remain visible at phone width");
+      assert.match(await dockStatus.textContent(), /Fixture interrupted signal/);
       assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0,
         "A pending signal must not ask for another play confirmation");
       await game.getByTestId("plot-1").click();
+      assert.match(await dockStatus.textContent(), /pending signal belongs to plot 5/i);
       assert.equal(await page.getByRole("button", { name: "Confirm preview", exact: true }).count(), 0,
         "A known pending signal must not be movable to another plot");
       assert.match(await game.getByTestId("plot-1").getAttribute("aria-label"), /empty/);

@@ -140,6 +140,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   }
 
   function applyVerifiedState(state: GameSnapshot, recoveryPlot: number | null = null) {
+    if (state.friendId !== friendId) throw new Error("Verified state belongs to a different Friend.");
     setSnapshot(state);
     const deferred = deferredAfter.current;
     deferredAfter.current = null;
@@ -240,7 +241,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
   const revealedOutcome = result?.outcomeId ? definition.outcomes[result.outcomeId - 1] : null;
 
   const navigate = (next: Menu) => {
-    if (busy || paused) return;
+    if (locked.current || busy || paused) return;
     setMenu(next); setError(""); setMessage("");
   };
   const buySeed = () => void act(() => client.buy(1n), () => {
@@ -248,6 +249,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     setMenu(null);
   });
   const plant = (plotIndex: number) => {
+    if (locked.current || paused || syncRequired) return;
     setPendingPlot(plotIndex);
     void act(async () => {
       const play = pending ?? (await client.play(1n))[0];
@@ -275,7 +277,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     plotIndex,
   );
   const clickPlot = (plotIndex: number) => {
-    if (busy || paused) return;
+    if (locked.current || busy || paused || syncRequired) return;
     const bloom = plots[plotIndex];
     setSelectedPlot(plotIndex);
     if (bloom) { setMenu("plot"); return; }
@@ -305,8 +307,8 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         <span><small>SEEDS</small><strong>{snapshot.consumables.toString()}</strong></span>
         <span><small>{snapshot.mode === "preview" ? "SIM RF SPENT" : "RF SPENT"}</small><strong>{formatGameAmount(sessionSpend, 18)}</strong></span>
       </div>
-      <button type="button" onClick={() => navigate("rules")}>Guide</button>
-      <button type="button" aria-label="Settings" onClick={() => navigate("settings")}>···</button>
+      <button type="button" disabled={busy || paused} onClick={() => navigate("rules")}>Guide</button>
+      <button type="button" disabled={busy || paused} aria-label="Settings" onClick={() => navigate("settings")}>···</button>
     </header>
 
     <main className="signal-stage" inert={Boolean(menu) || paused || undefined}>
@@ -340,7 +342,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
     </main>
 
     <footer className="signal-dock">
-      <button type="button" onClick={() => navigate("collection")}><span>Collection</span><strong>{discoveredBloomCount}/4</strong></button>
+      <button type="button" disabled={busy || paused} onClick={() => navigate("collection")}><span>Collection</span><strong>{discoveredBloomCount}/4</strong></button>
       <div className="signal-action">
         <button type="button" className="signal-primary"
           disabled={busy || paused || (!syncRequired && firstEmpty < 0)}
@@ -354,7 +356,7 @@ export default function SignalGarden({ friendId, client, paused }: GameComponent
         </button>
         <p className={error ? "signal-error" : ""} role={error ? "alert" : "status"} aria-live="polite">{status}</p>
       </div>
-      <button type="button" className="signal-model" onClick={() => navigate("activity")}
+      <button type="button" className="signal-model" disabled={busy || paused} onClick={() => navigate("activity")}
         aria-label={`Open token activity receipt, ${displayRf(sessionSpend)} spent`}>
         <span>{snapshot.mode === "preview" ? "SIMULATED ACTIVITY" : "RF ACTIVITY"}</span><small>{displayRf(sessionSpend)} spent · 10% burn + 5% vault proposed</small>
       </button>
