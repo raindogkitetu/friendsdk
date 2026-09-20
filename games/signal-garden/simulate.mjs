@@ -1,68 +1,82 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import {
+  RF,
+  createGamePreview,
+  expectedReward,
+  maximumPrize,
+  parseChanceGame,
+} from "../../dist/game.js";
 
-const definition = JSON.parse(await readFile(new URL("./game.json", import.meta.url), "utf8"));
-const BASE = 10n ** 18n;
-const price = BigInt(definition.price);
-const weighted = definition.outcomes.reduce((sum, outcome) =>
-  sum + BigInt(outcome.chanceBps) * BigInt(outcome.reward), 0n);
-const expected = weighted / 10_000n;
-const burn = price / 10n;
-const seasonVault = price / 20n;
-const rewards = definition.outcomes.map(outcome => BigInt(outcome.reward));
-const maxPrize = rewards.reduce((max, reward) => reward > max ? reward : max, 0n);
+const raw = JSON.parse(await readFile(new URL("./game.json", import.meta.url), "utf8"));
+const definition = parseChanceGame(raw);
+const price = definition.price;
+const expected = expectedReward(definition);
+const maxPrize = maximumPrize(definition);
+const rewards = definition.outcomes.map(outcome => outcome.reward);
 const minPrize = rewards.reduce((min, reward) => reward < min ? reward : min, rewards[0]);
 const previewStake = maxPrize * 10n;
-const previewBalance = 20n * BASE;
+const previewBalance = 20n * RF;
+const proposedBurn = price / 10n;
+const proposedSeasonVault = price / 20n;
 
 assert.equal(definition.outcomes.reduce((sum, outcome) => sum + outcome.chanceBps, 0), 10_000);
 assert.equal(expected, 850_000_000_000_000_000n);
+assert.equal(minPrize, 400_000_000_000_000_000n);
 assert.equal(maxPrize, 2_500_000_000_000_000_000n);
-assert.equal(price - expected, burn + seasonVault);
-assert.equal(previewStake, 25n * BASE);
+assert.equal(price - expected, proposedBurn + proposedSeasonVault);
+assert.equal(previewStake, 25n * RF);
 
-// Worst-case bankroll proof: assume every settled seed is the maximum 2.5 RF
-// reward and immediately harvest between repeat plays. This is harsher than the
-// expected-value path and proves the 15-signal peak Resonance tier is fundable
-// from the SDK preview's initial 10x-max-prize stake.
-let stake = previewStake;
-let balance = previewBalance;
-let freeStake = previewStake;
-for (let signal = 1; signal <= 15; signal++) {
-  assert(balance >= price, `Player balance cannot buy worst-case seed ${signal}`);
-  assert(freeStake >= maxPrize, `Free stake cannot back worst-case seed ${signal}`);
-  assert(freeStake + price >= maxPrize, `Purchase cannot reserve worst-case seed ${signal}`);
-  stake += price;
-  balance -= price;
-  // Buy reserves maxPrize; settle at maxPrize; immediate harvest pays it out.
-  stake -= maxPrize;
-  balance += maxPrize;
-  freeStake += price - maxPrize;
+async function runPath(name, roll) {
+  const { client } = createGamePreview(definition, {
+    stake: previewStake,
+    rfBalance: previewBalance,
+    friendId: 7730n,
+    draw: () => roll,
+  });
+  for (let signal = 1; signal <= 15; signal++) {
+    assert.equal(await client.canBuy(1n), true, name + ": seed " + signal + " must remain backed");
+    await client.buy(1n);
+    const [play] = await client.play(1n);
+    assert(play, name + ": seed " + signal + " must create one play");
+    const settled = await client.settle(play.id);
+    assert.notEqual(settled.outcomeId, null, name + ": seed " + signal + " must settle");
+    await client.redeem(settled.outcomeId, 1n);
+  }
+  const state = await client.read();
+  assert.equal(state.consumables, 0n);
+  assert.equal(state.plays.length, 15);
+  assert(state.plays.every(play => play.outcomeId !== null));
+  assert(state.inventory.every(quantity => quantity === 0n));
+  assert.equal(state.reservedPlays, 0n);
+  assert.equal(state.rewardLiability, 0n);
+  assert.equal(state.freeStake, state.stake);
+  return state;
 }
-assert.equal(freeStake, 2_500_000_000_000_000_000n);
 
-// Worst-case player-balance proof: the smallest 0.4 RF bloom loses 0.6 RF
-// net per buy+harvest cycle. Fifteen such cycles still leave 11 RF, so the
-// player-side preview balance cannot block the 15-signal tier either.
-let lowRewardBalance = previewBalance;
-for (let signal = 1; signal <= 15; signal++) {
-  assert(lowRewardBalance >= price, `Player balance cannot buy low-reward seed ${signal}`);
-  lowRewardBalance -= price;
-  lowRewardBalance += minPrize;
-}
-assert.equal(lowRewardBalance, 11n * BASE);
+// Roll 9999 always selects Starbloom (2.5 RF), the house-bankroll worst case.
+const maxPath = await runPath("maximum-reward path", 9_999);
+assert.equal(maxPath.rfBalance, 42_500_000_000_000_000_000n);
+assert.equal(maxPath.freeStake, 2_500_000_000_000_000_000n);
+
+// Roll 0 always selects Dewbud (0.4 RF), the player-balance worst case.
+const minPath = await runPath("minimum-reward path", 0);
+assert.equal(minPath.rfBalance, 11n * RF);
+assert.equal(minPath.freeStake, 34n * RF);
 
 console.log(JSON.stringify({
-  seedPriceRF: Number(price) / Number(BASE),
-  expectedHarvestRF: Number(expected) / Number(BASE),
-  expectedReturn: `${Number(expected * 10_000n / price) / 100}%`,
-  minimumHarvestRF: Number(minPrize) / Number(BASE),
-  maximumHarvestRF: Number(maxPrize) / Number(BASE),
-  previewPrizeStakeRF: Number(previewStake) / Number(BASE),
-  worstCaseFreeStakeAfter15RF: Number(freeStake) / Number(BASE),
-  lowRewardPlayerBalanceAfter15RF: Number(lowRewardBalance) / Number(BASE),
+  seedPriceRF: Number(price) / Number(RF),
+  expectedHarvestRF: Number(expected) / Number(RF),
+  expectedReturn: String(Number(expected * 10_000n / price) / 100) + "%",
+  minimumHarvestRF: Number(minPrize) / Number(RF),
+  maximumHarvestRF: Number(maxPrize) / Number(RF),
+  previewPrizeStakeRF: Number(previewStake) / Number(RF),
+  maxRewardPathFreeStakeAfter15RF: Number(maxPath.freeStake) / Number(RF),
+  maxRewardPathPlayerBalanceAfter15RF: Number(maxPath.rfBalance) / Number(RF),
+  minRewardPathFreeStakeAfter15RF: Number(minPath.freeStake) / Number(RF),
+  minRewardPathPlayerBalanceAfter15RF: Number(minPath.rfBalance) / Number(RF),
   guaranteedPeakResonanceSignals: 15,
-  proposedBurnRF: Number(burn) / Number(BASE),
-  proposedSeasonVaultRF: Number(seasonVault) / Number(BASE),
+  proposedBurnRF: Number(proposedBurn) / Number(RF),
+  proposedSeasonVaultRF: Number(proposedSeasonVault) / Number(RF),
   totalChanceBps: 10_000,
 }, null, 2));

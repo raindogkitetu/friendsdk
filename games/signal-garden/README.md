@@ -99,16 +99,16 @@ does not spend RF, request a signature or send a transaction.
 The deterministic economy proof is runnable with:
 
 ```sh
+npm run build
 node games/signal-garden/simulate.mjs
 ```
 
-It checks that weights total 10,000 bps, expected harvest is exactly 0.85 RF,
-maximum harvest is 2.5 RF, the 0.15 RF gap exactly matches the proposed 0.10 RF
-burn plus 0.05 RF season vault, and the SDK preview's 25 RF starting prize stake
-can fund the 15-signal peak Resonance tier even if every result is the maximum
-2.5 RF reward and each bloom is immediately harvested to reopen space. A second
-worst-case path verifies that fifteen minimum 0.4 RF harvests still leave the
-player with 11 sim RF from the 20 sim RF starting balance.
+It parses the same `game.json` through FriendSDK and drives the SDK's actual
+`createGamePreview` ledger through fifteen `buy → play → settle → redeem`
+cycles. It checks 10,000 bps, 0.85 RF expected harvest, 2.5 RF maximum harvest,
+the proposed 0.10/0.05 RF model split, the maximum-reward house-bankroll path
+(2.5 sim RF free stake remains), and the minimum-reward player-balance path
+(11 sim RF remains from the 20 sim RF starting balance).
 
 ### Harmony scoring
 
