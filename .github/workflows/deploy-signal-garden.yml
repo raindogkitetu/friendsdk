@@ -30,6 +30,7 @@ jobs:
 
       - name: Verify official FriendSDK v0.1.3 runtime integrity
         run: |
+          git fetch --no-tags --depth=1 https://github.com/spokesz/friendsdk.git f34f4058ed4b4f78ae21fdd22084f0aee6993c6b
           git diff --exit-code f34f4058ed4b4f78ae21fdd22084f0aee6993c6b -- \
             src contracts assets LICENSE NOTICE.md package.json package-lock.json \
             scripts/dev-game.mjs scripts/testing.mjs scripts/browser-fixture.mjs
