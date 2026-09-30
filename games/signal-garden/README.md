@@ -4,7 +4,7 @@ Grow a personalized signal garden around your verified Rare Friend. Buy a Signal
 Seed for 1 sim RF, choose one of twelve plots, reveal a bloom, then keep it for
 harmony or harvest its fixed sim RF value.
 
-Signal Garden is a FriendSDK v0.1.3 Vibeathon game. The SDK runtime supplies the
+Signal Garden is a FriendSDK v0.1.4 Vibeathon game. The SDK runtime supplies the
 wallet connection, owned-Friend picker, fresh eligibility check, sandbox, preview
 ledger and action confirmations. The game receives only the verified Friend ID,
 the fixed SDK action client and pause state.
@@ -158,7 +158,7 @@ that covers the chosen expected payout and every maximum-prize liability, or
 (b) reprice/reweight the live reward table so liabilities fit the then-current
 protocol allocation. Sales must stop before the reserve cannot fully back the next
 maximum prize. Explicit wallet confirmations and separate production review remain
-required. FriendSDK v0.1.3 does not expose burn/reward-routing actions to this
+required. FriendSDK v0.1.4 does not expose burn/reward-routing actions to this
 preview. No live contract or transaction flow is included.
 
 The design creates three aligned loops:
@@ -178,7 +178,7 @@ of erasing the prior loop.
 
 The Vibeathon also describes future token economies that can introduce a separate
 asset and pair it with $RAREFRIENDS. A reviewed Signal Garden season could therefore
-make persistent Bloom or habitat assets a **separate** layer outside FriendSDK v0.1.3:
+make persistent Bloom or habitat assets a **separate** layer outside FriendSDK v0.1.4:
 RF gameplay payments would still follow the then-current protocol routing, while
 the Bloom asset's issuance, RF market pair and any creator/trading-fee rules would
 need their own published contract and audit. Any redeemable player payout would
@@ -260,9 +260,9 @@ development and static builds require a real eligible wallet.
 
 ### Fork integrity
 
-Signal Garden uses the official FriendSDK v0.1.3 runtime. The fork's `src/`,
+Signal Garden uses the official FriendSDK v0.1.4 runtime. The fork's `src/`,
 `contracts/`, `assets/`, license/notice, package manifest/lockfile and runtime
-build helpers are unchanged from official release commit `f34f4058ed4b4f78ae21fdd22084f0aee6993c6b`. Both CI
+build helpers are unchanged from official release commit `ca3bf183b809ecf22d87c63d88ce03969a3f8da2`. Both CI
 and public deployment run a direct `git diff --exit-code` against that commit on
 those protected paths before proceeding. The preview deploy runs on **every** push
 to `main`, and `SOURCE_COMMIT.txt` is created and allowlisted before publication,
@@ -279,7 +279,7 @@ dependency license comments.
 
 - The economy is simulated. The displayed 50% burn / 50% rewards values are
   current-protocol reference values only; no live burn or reward routing occurs.
-- Garden placement is session-local because FriendSDK v0.1.3 has no persistence API.
+- Garden placement is session-local because FriendSDK v0.1.4 has no persistence API.
   Interrupted settlement preserves the selected plot while the frame stays mounted.
   If the sandbox frame itself reloads, a recovered pending signal must be assigned
   to an empty plot again, and visible kept blooms are rebuilt from host inventory;
@@ -310,7 +310,7 @@ dependency license comments.
 Built by **raindog_kitetu** — [GitHub @raindogkitetu](https://github.com/raindogkitetu)
 and [X @raindog_kitetu](https://x.com/raindog_kitetu).
 
-Built with FriendSDK v0.1.3. Wallet/Friend runtime, canonical Generations artwork,
+Built with FriendSDK v0.1.4. Wallet/Friend runtime, canonical Generations artwork,
 sandbox bridge and simulated chance-game ledger are from FriendSDK under its
 Apache-2.0 source license and artwork notice. Signal Garden's UI, bloom vectors,
 rules, scoring and economy model are original. No external assets beyond the
