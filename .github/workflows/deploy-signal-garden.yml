@@ -60,6 +60,7 @@ jobs:
           cp LICENSE games/signal-garden/.friendsdk/LICENSE
           cp NOTICE.md games/signal-garden/.friendsdk/NOTICE.md
           cp games/signal-garden/NOTICE.md games/signal-garden/.friendsdk/SIGNAL_GARDEN_NOTICE.md
+          cp games/signal-garden/judge.html games/signal-garden/.friendsdk/judge.html
           : > games/signal-garden/.friendsdk/.nojekyll
           printf '%s\n' "$GITHUB_SHA" > games/signal-garden/.friendsdk/SOURCE_COMMIT.txt
 
@@ -74,6 +75,7 @@ jobs:
           test -f games/signal-garden/.friendsdk/LICENSE
           test -f games/signal-garden/.friendsdk/NOTICE.md
           test -f games/signal-garden/.friendsdk/SIGNAL_GARDEN_NOTICE.md
+          test -f games/signal-garden/.friendsdk/judge.html
           test "$(cat games/signal-garden/.friendsdk/SOURCE_COMMIT.txt)" = "$GITHUB_SHA"
           cat > /tmp/signal-garden-expected-files.txt <<'EOF'
           .friendsdk-output.json
@@ -87,6 +89,7 @@ jobs:
           game.html
           game.js
           index.html
+          judge.html
           layout.css
           runtime.css
           runtime.js
