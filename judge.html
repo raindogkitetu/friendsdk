@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signal Garden — Judge Review</title>
+<style>
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:960px;margin:0 auto;padding:24px;line-height:1.5;background:#f7f7f7;color:#111}
+main{background:white;padding:24px;border:1px solid #ddd;border-radius:12px}
+h1,h2{line-height:1.2}
+.notice{padding:16px;border:1px solid #bbb;border-radius:10px;background:#fafafa}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+img{width:100%;height:auto;border:1px solid #ccc;border-radius:8px}
+code{word-break:break-all}
+a{color:#0645ad}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Signal Garden — Judge-safe review</h1>
+<div class="notice">
+<strong>This page does not connect to a wallet and does not request signatures or transactions.</strong>
+<p>The playable preview currently triggers an external wallet/security false-positive warning in MetaMask and Brave. This page exists so judges can review the current build, screenshots, source and verification evidence without bypassing that warning.</p>
+</div>
+
+<h2>Current verified build</h2>
+<ul>
+<li>FriendSDK: <strong>v0.1.4</strong></li>
+<li>Official SDK commit: <code>ca3bf183b809ecf22d87c63d88ce03969a3f8da2</code></li>
+<li>Exact deployed source: <a href="SOURCE_COMMIT.txt"><code>SOURCE_COMMIT.txt</code></a></li>
+<li>SDK/game verification: <strong>SUCCESS</strong> on the current release path</li>
+<li>Preview deployment: <strong>SUCCESS</strong>; exact source provenance is published above</li>
+<li>JavaScript tests: <strong>118 pass / 0 fail</strong></li>
+<li>Contract tests: <strong>16 pass / 0 fail / 1 fork-dependent skip</strong></li>
+<li>Browser checks: <strong>960 / 760 / 521 / 360 px PASS</strong></li>
+</ul>
+
+<h2>What it is</h2>
+<p>Signal Garden is a personalized Rare Friends garden game. A verified Generations Friend is the center character; its family and art seed shape non-financial garden strategy. Seed purchases and rewards are simulated for the Vibeathon preview.</p>
+
+<h2>Verified screenshots</h2>
+<div class="grid">
+<figure><img src="signal-garden-960.png" alt="Signal Garden desktop automated verification screenshot"><figcaption>Desktop automated verification.</figcaption></figure>
+<figure><img src="signal-garden-360.png" alt="Signal Garden mobile-width automated verification screenshot"><figcaption>360 px automated verification.</figcaption></figure>
+</div>
+
+<h2>Links</h2>
+<ul>
+<li><a href="https://github.com/raindogkitetu/friendsdk/tree/main/games/signal-garden">Source code</a></li>
+<li><a href="https://github.com/raindogkitetu/friendsdk/actions/workflows/check.yml">SDK and game checks history</a></li>
+<li><a href="https://github.com/raindogkitetu/friendsdk/actions/workflows/deploy-signal-garden.yml">Preview deployment history</a></li>
+<li><a href="SOURCE_COMMIT.txt">Deployed source provenance</a></li>
+<li><a href="./">Playable preview (wallet required; external warning may appear)</a></li>
+</ul>
+
+<p><strong>Security note:</strong> the preview performs no live RF burn, no live reward routing and no live gameplay transaction.</p>
+</main>
+</body>
+</html>
