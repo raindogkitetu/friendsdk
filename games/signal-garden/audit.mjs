@@ -154,13 +154,13 @@ for (const phrase of [
   "signal-garden-360.png",
   "signal-garden-960.png",
   "diff -u /tmp/signal-garden-expected-files.txt /tmp/signal-garden-actual-files.txt",
-  "f34f4058ed4b4f78ae21fdd22084f0aee6993c6b",
+  "ca3bf183b809ecf22d87c63d88ce03969a3f8da2",
   "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
 ]) assert(deployWorkflow.includes(phrase), "Deploy integrity/legal/supply-chain guard is missing: " + phrase);
 for (const phrase of [
-  "f34f4058ed4b4f78ae21fdd22084f0aee6993c6b",
+  "ca3bf183b809ecf22d87c63d88ce03969a3f8da2",
   "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
   "foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09",
